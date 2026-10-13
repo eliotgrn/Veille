@@ -1,0 +1,356 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Veille"><meta name="theme-color" content="#16202E">
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><link rel="icon" href="icon-192.png">
+</head><body><title>Veille de connaissances</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+/* Layout : barre fixe (retour, recherche) ; accueil = recherche, accès direct, 4 portes, favoris ; document = fil d'Ariane, sommaire, L'essentiel ouvert, Le détail en sections dépliables */
+:root{
+  --bg:#F4F5F7; --panel:#FFFFFF; --ink:#16202E; --mute:#5D6675; --line:#D9DDE3; --soft:#ECEFF3; --mark:#FFE58A;
+  --p1:#6D3FC0; --p2:#C2410C; --p3:#1D4ED8; --p4:#8A5A00; --acc:#16202E;
+  --ui:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --read:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --fs:17px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#10141B; --panel:#181E28; --ink:#E6EAF0; --mute:#9AA4B3; --line:#2B3442; --soft:#212938; --mark:#6B5A12;
+  --p1:#B49BF0; --p2:#F08A4B; --p3:#86A8FF; --p4:#E2B85A; --acc:#E6EAF0; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10141B; --panel:#181E28; --ink:#E6EAF0; --mute:#9AA4B3; --line:#2B3442; --soft:#212938; --mark:#6B5A12;
+  --p1:#B49BF0; --p2:#F08A4B; --p3:#86A8FF; --p4:#E2B85A; --acc:#E6EAF0; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--ui);font-size:15px;line-height:1.45;margin:0;-webkit-tap-highlight-color:transparent}
+a{color:inherit}
+button,input,select,textarea{font:inherit;color:var(--ink)}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.topin{max-width:1100px;margin:0 auto;padding-block:8px;padding-inline:16px;display:flex;gap:8px;align-items:center}
+.ib{min-width:40px;min-height:40px;border:1px solid var(--line);background:var(--panel);border-radius:9px;display:inline-flex;align-items:center;justify-content:center;font-weight:600;padding:0 10px;white-space:nowrap}
+.brand{font-family:var(--display);font-weight:700;font-size:20px;letter-spacing:.01em;white-space:nowrap;text-decoration:none}
+.sbox{flex:1;min-width:0;position:relative}
+.sbox input{width:100%;min-height:40px;border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:0 12px 0 34px}
+.sbox svg{position:absolute;left:10px;top:11px;width:18px;height:18px;stroke:var(--mute)}
+main{max-width:1100px;margin:0 auto;padding-inline:16px;padding-block:16px 60px}
+h1{font-family:var(--display);font-weight:700;font-size:30px;line-height:1.1;margin:0;text-wrap:balance}
+.lead{color:var(--mute);margin:4px 0 0}
+.sec{margin-top:22px}
+.sec>h2{font-family:var(--display);font-size:21px;font-weight:700;margin:0 0 8px}
+.doors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:640px){.doors{grid-template-columns:minmax(0,1fr)}}
+.door{display:flex;flex-direction:column;gap:6px;text-decoration:none;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;border-top:4px solid var(--pc)}
+.door b{font-family:var(--display);font-size:24px;color:var(--pc);line-height:1.1}
+.door span{color:var(--mute);font-size:14px}
+.door small{color:var(--mute);font-size:12.5px}
+.quick{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.f{display:flex;flex-direction:column;gap:3px;min-width:0}
+.f label{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--mute)}
+.f select{min-height:40px;border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:0 8px;max-width:100%}
+.go{min-height:40px;border-radius:8px;border:none;background:var(--ink);color:var(--bg);font-weight:600;padding:0 16px}
+.list{display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.li{display:grid;grid-template-columns:62px minmax(0,1fr);gap:10px;padding:10px 14px;text-decoration:none;border-top:1px solid var(--line);align-items:baseline}
+.li:first-child{border-top:none}
+.li .code{font-variant-numeric:tabular-nums;color:var(--mute);font-size:13px}
+.li .tt{font-size:15px}
+.li .tt small{display:block;color:var(--mute);font-size:12.5px;margin-top:1px}
+.fold{margin-top:12px}
+.fold>h3{font-family:var(--display);font-size:19px;margin:16px 0 6px;color:var(--pc)}
+.crumb{font-size:13px;color:var(--mute);display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center}
+.crumb a{text-decoration:none;color:var(--pc);font-weight:600}
+.dochead{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:flex-start;margin-top:6px}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+.star[aria-pressed=true]{color:#B7791F;border-color:#B7791F}
+.toc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-top:14px;font-size:14px}
+.toc b{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--mute)}
+.toc ol{margin:6px 0 0;padding-left:18px;columns:2;column-gap:28px}
+@media (max-width:640px){.toc ol{columns:1}}
+.toc a{text-decoration:none}
+.toc a:hover{text-decoration:underline}
+.doc{font-family:var(--read);font-size:var(--fs);line-height:1.6;margin-top:10px}
+.doc p,.doc li{max-width:72ch}
+.doc h2{font-family:var(--display);font-size:1.35em;letter-spacing:.04em;margin:26px 0 8px;color:var(--pc)}
+.doc .ess{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--pc);border-radius:10px;padding:4px 18px 10px}
+.doc .ess h2{margin-top:12px}
+.doc details{border-top:1px solid var(--line);padding:2px 0}
+.doc summary{font-family:var(--ui);font-weight:600;font-size:1.02em;padding:10px 0;cursor:pointer;list-style:none;display:flex;gap:10px;align-items:baseline}
+.doc summary::-webkit-details-marker{display:none}
+.doc summary::before{content:"+";display:inline-block;width:1em;color:var(--pc);font-weight:700}
+.doc details[open]>summary::before{content:"–"}
+.doc h4{font-family:var(--ui);font-size:.98em;margin:16px 0 4px;color:var(--pc)}
+.doc h5,.doc h6{font-family:var(--ui);font-size:.92em;margin:12px 0 4px}
+.tw{overflow-x:auto;margin:10px 0;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+.doc table{border-collapse:collapse;font-family:var(--ui);font-size:.82em;line-height:1.4;min-width:100%}
+.doc th,.doc td{border-bottom:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+.doc th{background:var(--soft);font-weight:600}
+.doc blockquote{margin:10px 0;padding:6px 14px;border-left:3px solid var(--line);color:var(--mute)}
+.ref{color:var(--pc);font-weight:600;text-decoration:none;border-bottom:1px dotted currentColor}
+.bq,.ex{font-family:var(--ui);font-size:.82em;background:var(--soft);border-radius:5px;padding:1px 5px;white-space:nowrap}
+mark{background:var(--mark);color:inherit;border-radius:2px}
+.doc details,.doc h4,.doc h5,.doc tr,.doc mark{scroll-margin-top:78px}
+.flash{animation:fl 1.6s ease}
+@keyframes fl{0%{background:var(--mark)}100%{background:transparent}}
+@media (prefers-reduced-motion: reduce){.flash{animation:none}}
+.pn{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-top:26px}
+.pn a{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;text-decoration:none;font-size:14px}
+.pn a small{display:block;color:var(--mute);font-size:12px}
+.pn a.nx{text-align:right}
+.notes{margin-top:22px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.notes textarea{width:100%;min-height:90px;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--bg);resize:vertical}
+.res{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;text-decoration:none;display:block}
+.res+.res{margin-top:8px}
+.res .t{font-weight:600}
+.res .w{color:var(--mute);font-size:12.5px}
+.res .s{font-family:var(--read);font-size:14.5px;margin-top:4px;color:var(--ink)}
+.empty{color:var(--mute);padding:14px;background:var(--panel);border:1px dashed var(--line);border-radius:12px}
+.tools{display:flex;flex-wrap:wrap;gap:8px}
+.msg{font-size:13.5px;color:var(--mute)}
+.load{padding:40px 0;color:var(--mute)}
+</style>
+
+<header class="top"><div class="topin">
+  <button class="ib" id="back" type="button" aria-label="Retour">‹</button>
+  <a class="brand" href="#">Veille</a>
+  <div class="sbox"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+    <input id="q" type="search" placeholder="Rechercher dans toute la veille" autocomplete="off" enterkeyhint="search"></div>
+</div></header>
+<main id="main"><div class="load">Chargement de la veille…</div></main>
+
+<script>
+"use strict";
+const PORTES = {
+  "1": {n:"Par âge", c:"--p1", s:"Un document par âge, de 0 à 3 ans à l'adulte : tout ce qui concerne cet âge au même endroit."},
+  "2": {n:"Préparation physique", c:"--p2", s:"Les 12 lignes des grilles, la musculation, l'échauffement, la prévention et les tests."},
+  "3": {n:"Biomécanique", c:"--p3", s:"Les 13 coups du geste et les 11 lignes du déplacement, principes et âge par âge."},
+  "4": {n:"Entraîner", c:"--p4", s:"Développement de l'enfant, analyse du jeu, sciences, planification, récupération, pédagogie, mental."}
+};
+const PP = ["Force du bas du corps","Force du haut du corps","Gainage et stabilité du tronc","Puissance des jambes : sauts et pliométrie","Puissance du haut du corps et rotation","Vitesse et accélération","Freinage, changements de direction et agilité","Endurance aérobie","Répétition d'efforts intenses","Coordination, motricité fondamentale et rythme","Équilibre et proprioception","Mobilité et souplesse"];
+const GE = [["Service à plat","3.3.2"],["Service slicé","3.4.2"],["Service lifté","3.5.2"],["Coup droit lifté","3.7.2"],["Coup droit à plat","3.8.2"],["Coup droit slicé","3.9.2"],["Revers lifté","3.11.2"],["Revers à plat","3.12.2"],["Revers slicé","3.13.2"],["Volée de coup droit","3.15.2"],["Volée de revers","3.16.2"],["Smash","3.17.2"],["Amortie et touché de balle","3.18.3"]];
+const DE = ["Position d'attention","Allègement et reprise d'appuis","Démarrage et premiers pas","Déplacements latéraux","Déplacements vers l'avant et vers l'arrière","Pas d'ajustement et mise à distance","Appuis de frappe","Freinage et décélération","Changement de direction et réaccélération","Replacement","Enchaînements et liaison des actions"];
+const RADAR = "https://eliotgrn.github.io/Profil-radar/";
+
+let DOCS = [], BY = {}, NORM = null;
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fold = s => { let o=""; for(const ch of s){ const d=ch.normalize("NFD")[0]; o += (d||ch).toLowerCase(); } return o; };
+const keyc = c => c.split(".").map(Number);
+
+/* ---------- préférences locales ---------- */
+const ST = "veille_v1";
+function load(){ try{ return JSON.parse(localStorage.getItem(ST)) || {}; }catch(e){ return {}; } }
+let P = Object.assign({fav:[], rec:[], notes:{}, fs:17, age:"10", dom:"PP", ligne:"0"}, load());
+function save(){ try{ localStorage.setItem(ST, JSON.stringify(P)); }catch(e){} }
+document.documentElement.style.setProperty("--fs", P.fs+"px");
+
+/* ---------- données ---------- */
+async function boot(){
+  try{
+    const r = await fetch("data.json"); const d = await r.json();
+    DOCS = d.docs; DOCS.forEach((x,i)=>{ x.i=i; BY[x.c]=x; });
+  }catch(e){ $("#main").innerHTML = '<div class="empty">La veille n\'a pas pu se charger. Vérifie la connexion pour la première ouverture, puis recharge la page.</div>'; return; }
+  route();
+  setTimeout(buildIndex, 50);
+}
+function buildIndex(){
+  if(NORM) return;
+  const tmp = document.createElement("div");
+  NORM = DOCS.map(x => { tmp.innerHTML = x.h; const t = (x.t+" \n "+tmp.textContent).replace(/\s+/g," "); return {raw:t, f:fold(t)}; });
+}
+
+/* ---------- routage ---------- */
+window.addEventListener("hashchange", route);
+$("#back").onclick = () => { if(history.length > 1) history.back(); else location.hash = ""; };
+function route(){
+  const h = decodeURIComponent(location.hash.slice(1));
+  const m = $("#main"); window.scrollTo(0,0);
+  if(h.startsWith("d/")) return showDoc(h.slice(2).split("/")[0], h.split("/")[2]);
+  if(h.startsWith("p/")) return showPorte(h.slice(2));
+  if(h.startsWith("s/")) { $("#q").value = h.slice(2); return showSearch(h.slice(2)); }
+  showHome();
+}
+function porteOf(x){ return x.c[0]; }
+function pc(p){ return `var(${PORTES[p].c})`; }
+
+/* ---------- accueil ---------- */
+function showHome(){
+  document.documentElement.style.setProperty("--acc", "var(--ink)");
+  const m = $("#main");
+  const count = p => DOCS.filter(x=>porteOf(x)===p).length;
+  let html = `<h1>Veille de connaissances</h1><p class="lead">Préparation physique et biomécanique du tennis · ${DOCS.length} documents · toutes les ressources réunies en un seul modèle</p>`;
+  html += `<div class="sec"><h2>Accès direct</h2><div class="quick">
+    <div class="f"><label for="qa">Âge</label><select id="qa">${["0-3","3",...Array.from({length:15},(_,i)=>String(i+4)),"adulte"].map(a=>`<option value="${a}">${a==="adulte"?"Adulte":a==="0-3"?"0 à 3 ans":a+" ans"}</option>`).join("")}</select></div>
+    <div class="f"><label for="qd">Domaine</label><select id="qd"><option value="AGE">Tout l'âge (document de l'âge)</option><option value="PP">Préparation physique</option><option value="GE">Biomécanique du geste</option><option value="DE">Biomécanique du déplacement</option></select></div>
+    <div class="f" id="qlw" style="flex:1;min-width:200px"><label for="ql">Ligne</label><select id="ql"></select></div>
+    <button class="go" id="qgo" type="button">Ouvrir</button></div></div>`;
+  html += `<div class="sec"><h2>Les portes</h2><div class="doors">${Object.entries(PORTES).map(([p,o])=>`<a class="door" href="#p/${p}" style="--pc:var(${o.c})"><b>${p} · ${o.n}</b><span>${o.s}</span><small>${count(p)} documents</small></a>`).join("")}</div>
+    <p class="msg" style="margin-top:8px">La banque d'exercices est une appli séparée.</p></div>`;
+  const favs = P.fav.filter(c=>BY[c]), recs = P.rec.filter(c=>BY[c]).slice(0,8);
+  html += `<div class="sec"><h2>Favoris</h2>${favs.length ? listHTML(favs.map(c=>BY[c]), true) : '<div class="empty">Touche ☆ en haut d\'un document pour le retrouver ici.</div>'}</div>`;
+  if(recs.length) html += `<div class="sec"><h2>Consultés récemment</h2>${listHTML(recs.map(c=>BY[c]), true)}</div>`;
+  html += `<div class="sec"><h2>Mes données</h2><div class="tools">
+     <button class="ib" id="bsave" type="button">Sauvegarder favoris et notes</button>
+     <label class="ib" for="frest">Restaurer</label><input id="frest" type="file" accept=".json,application/json" hidden>
+     <button class="ib" id="fsm" type="button" aria-label="Texte plus petit">A−</button><button class="ib" id="fsp" type="button" aria-label="Texte plus grand">A+</button>
+     <a class="ib" href="${RADAR}" target="_blank" rel="noopener">Profil radar ↗</a></div><p class="msg" id="dmsg">Favoris et notes sont gardés sur cet appareil.</p></div>`;
+  m.innerHTML = html;
+  const qa=$("#qa"), qd=$("#qd"), ql=$("#ql");
+  qa.value=P.age; qd.value=P.dom;
+  const fill=()=>{ const d=qd.value; $("#qlw").hidden = d==="AGE"; const L = d==="PP"?PP : d==="GE"?GE.map(x=>x[0]) : d==="DE"?DE : [];
+    ql.innerHTML = L.map((n,i)=>`<option value="${i}">${i+1} · ${esc(n)}</option>`).join(""); if(+P.ligne < L.length) ql.value=P.ligne; };
+  fill(); qd.onchange=()=>{ P.ligne="0"; fill(); };
+  $("#qgo").onclick=()=>{ P.age=qa.value; P.dom=qd.value; P.ligne=ql.value||"0"; save(); quickGo(qa.value, qd.value, +ql.value); };
+  $("#bsave").onclick=exportData; $("#frest").onchange=importData;
+  $("#fsm").onclick=()=>setFs(-1); $("#fsp").onclick=()=>setFs(1);
+}
+function setFs(d){ P.fs=Math.max(14,Math.min(24,P.fs+d)); save(); document.documentElement.style.setProperty("--fs",P.fs+"px"); const m=$("#dmsg"); if(m) m.textContent="Taille du texte des documents : "+P.fs+" px."; }
+function quickGo(age, dom, i){
+  const ageCode = {"0-3":"1.1.1","3":"1.1.2","adulte":"1.1.18"}[age] || ("1.1."+(+age-1));
+  let code = ageCode;
+  if(dom==="PP") code = `2.${i+1}.2`;
+  if(dom==="GE") code = GE[i][1];
+  if(dom==="DE") code = `3.20.${i+1}`;
+  location.hash = `d/${code}` + (dom!=="AGE" && /^\d+$/.test(age) ? `/a${age}` : "");
+}
+function listHTML(xs, withPath){
+  return `<div class="list">${xs.map(x=>`<a class="li" href="#d/${x.c}"><span class="code">${x.c}</span><span class="tt">${esc(x.t)}${withPath?`<small>${esc(x.d.replace(/^\d+(\.\d+)?\s/,""))}</small>`:""}</span></a>`).join("")}</div>`;
+}
+
+/* ---------- porte ---------- */
+function showPorte(p){
+  if(!PORTES[p]) return showHome();
+  document.documentElement.style.setProperty("--acc", pc(p));
+  const xs = DOCS.filter(x=>porteOf(x)===p), groups = {};
+  xs.forEach(x=>{ (groups[x.d] = groups[x.d] || []).push(x); });
+  let html = `<div class="crumb" style="--pc:${pc(p)}"><a href="#">Accueil</a></div><h1 style="color:${pc(p)}">${p} · ${PORTES[p].n}</h1><p class="lead">${PORTES[p].s}</p>`;
+  html += Object.entries(groups).map(([d,arr])=>`<div class="fold" style="--pc:${pc(p)}"><h3>${esc(d)}</h3>${listHTML(arr,false)}</div>`).join("");
+  $("#main").innerHTML = html;
+}
+
+/* ---------- document ---------- */
+function showDoc(code, hint){
+  const x = BY[code]; if(!x) return showHome();
+  const p = porteOf(x); document.documentElement.style.setProperty("--acc", pc(p));
+  P.rec = [code, ...P.rec.filter(c=>c!==code)].slice(0,20); save();
+  const sib = DOCS.filter(y=>y.d===x.d), k = sib.indexOf(x), prev = sib[k-1], next = sib[k+1];
+  const fav = P.fav.includes(code);
+  const m = $("#main"); m.style.setProperty("--pc", pc(p));
+  m.innerHTML = `<div class="crumb"><a href="#">Accueil</a>›<a href="#p/${p}">${p} · ${PORTES[p].n}</a>›<span>${esc(x.d)}</span></div>
+    <div class="dochead"><h1>${esc(x.t)}</h1><div class="acts">
+      <button class="ib star" id="fav" type="button" aria-pressed="${fav}">${fav?"★ Favori":"☆ Favori"}</button>
+      <button class="ib" id="fsm" type="button" aria-label="Texte plus petit">A−</button><button class="ib" id="fsp" type="button" aria-label="Texte plus grand">A+</button></div></div>
+    <div class="crumb" style="margin-top:4px">${esc(x.ch||"")} · document ${x.c}</div>
+    <nav class="toc" id="toc" hidden></nav>
+    <article class="doc" id="doc"></article>
+    <div class="pn">${prev?`<a href="#d/${prev.c}"><small>‹ Précédent</small>${esc(prev.t)}</a>`:"<span></span>"}${next?`<a class="nx" href="#d/${next.c}"><small>Suivant ›</small>${esc(next.t)}</a>`:"<span></span>"}</div>
+    <div class="notes"><label for="nt" style="font-weight:600">Mes notes sur ce document</label><textarea id="nt" placeholder="Idées, joueurs concernés, à tester…"></textarea><div class="msg" id="ntm"></div></div>`;
+  // structure : L'essentiel encadré, Le détail en sections dépliables
+  const doc = $("#doc"); const tmp = document.createElement("div"); tmp.innerHTML = x.h;
+  tmp.querySelectorAll("table").forEach(t=>{ const w=document.createElement("div"); w.className="tw"; t.replaceWith(w); w.appendChild(t); });
+  let cur = null, mode = null, sections = [];
+  for(const node of [...tmp.childNodes]){
+    if(node.nodeName==="H2"){
+      const t = fold(node.textContent);
+      if(t.includes("essentiel")){ cur = document.createElement("section"); cur.className="ess"; cur.appendChild(node); doc.appendChild(cur); mode="ess"; continue; }
+      mode = "det"; doc.appendChild(node); cur = doc; continue;
+    }
+    if(node.nodeName==="H3" && mode!=="ess"){
+      const d = document.createElement("details"); const s = document.createElement("summary"); s.textContent = node.textContent; d.appendChild(s);
+      d.id = "s"+sections.length; sections.push([d.id, node.textContent]); doc.appendChild(d); cur = d; continue;
+    }
+    (cur || doc).appendChild(node);
+  }
+  if(sections.length>2){ const toc=$("#toc"); toc.hidden=false; toc.innerHTML = `<b>Le détail</b><ol>${sections.map(([id,t])=>`<li><a href="#" data-s="${id}">${esc(t.replace(/^\d+\.\s*/,""))}</a></li>`).join("")}</ol>`;
+    toc.onclick = e=>{ const a=e.target.closest("a[data-s]"); if(!a) return; e.preventDefault(); const d=document.getElementById(a.dataset.s); d.open=true; d.scrollIntoView({behavior:"smooth",block:"start"}); }; }
+  if(sections.length===1){ doc.querySelector("details").open = true; }
+  // favoris, taille, notes
+  $("#fav").onclick = ()=>{ const on = !P.fav.includes(code); P.fav = on ? [code,...P.fav] : P.fav.filter(c=>c!==code); save(); $("#fav").setAttribute("aria-pressed",on); $("#fav").textContent = on?"★ Favori":"☆ Favori"; };
+  $("#fsm").onclick=()=>setFs(-1); $("#fsp").onclick=()=>setFs(1);
+  const nt=$("#nt"); nt.value = P.notes[code]||""; let tm;
+  nt.oninput = ()=>{ clearTimeout(tm); tm=setTimeout(()=>{ if(nt.value.trim()) P.notes[code]=nt.value; else delete P.notes[code]; save(); $("#ntm").textContent="Note enregistrée sur cet appareil."; },500); };
+  // aller à un âge ou surligner une recherche
+  if(hint && hint.startsWith("a")) goAge(+hint.slice(1));
+  else if(hint && hint.startsWith("q")) highlight(hint.slice(1));
+}
+function ageIn(text, age){
+  const t = fold(text); if(!/\ban|ans\b/.test(t)) return false;
+  const nums = (t.match(/\d+/g)||[]).map(Number).filter(n=>n<=25); if(!nums.length) return false;
+  if(/\d+\s*(-|a|à|et)\s*\d+/.test(t) && nums.length>=2){ const lo=Math.min(...nums), hi=Math.max(...nums); return age>=lo && age<=hi; }
+  return nums.includes(age);
+}
+function goAge(age){
+  const doc = $("#doc");
+  let target = [...doc.querySelectorAll("details")].find(d=>ageIn(d.querySelector("summary").textContent, age));
+  if(target){ target.open=true; setTimeout(()=>{ target.scrollIntoView({behavior:"smooth",block:"start"}); target.querySelector("summary").classList.add("flash"); },60); return; }
+  const h = [...doc.querySelectorAll("h4,h5")].find(e=>ageIn(e.textContent, age));
+  if(h){ const d=h.closest("details"); if(d) d.open=true; setTimeout(()=>{ h.scrollIntoView({behavior:"smooth",block:"center"}); h.classList.add("flash"); },60); return; }
+  const td = [...doc.querySelectorAll("td:first-child")].find(e=>ageIn(e.textContent, age));
+  if(td){ const tr=td.parentNode; setTimeout(()=>{ tr.scrollIntoView({behavior:"smooth",block:"center"}); tr.classList.add("flash"); },60); }
+}
+
+/* ---------- recherche ---------- */
+let sT;
+$("#q").addEventListener("input", e=>{ clearTimeout(sT); const v=e.target.value.trim(); sT=setTimeout(()=>{ if(v.length>=2) history.replaceState(null,"","#s/"+encodeURIComponent(v)), showSearch(v); else if(!v && location.hash.startsWith("#s/")) location.hash=""; },250); });
+$("#q").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.target.blur(); } });
+function terms(q){ return fold(q).split(/\s+/).filter(w=>w.length>=2); }
+function showSearch(q){
+  document.documentElement.style.setProperty("--acc", "var(--ink)");
+  buildIndex();
+  const ts = terms(q), m = $("#main");
+  if(!ts.length){ showHome(); return; }
+  const res = [];
+  NORM.forEach((n,i)=>{
+    let score=0, first=-1;
+    for(const t of ts){ let c=0, pos=n.f.indexOf(t); if(pos<0){ score=0; return; } if(first<0||pos<first) first=pos; while(pos>=0 && c<60){ c++; pos=n.f.indexOf(t,pos+t.length); } score+=c; }
+    if(fold(DOCS[i].t).includes(ts[0])) score+=40;
+    res.push({i, score, first});
+  });
+  res.sort((a,b)=>b.score-a.score);
+  const top = res.slice(0,60);
+  let html = `<h1>Recherche</h1><p class="lead">${res.length ? `${res.length} document${res.length>1?"s":""} pour « ${esc(q)} »${res.length>60?" · les 60 plus pertinents":""}` : `Aucun document ne contient « ${esc(q)} ». Essaie un mot plus court ou un synonyme.`}</p><div class="sec">`;
+  html += top.map(r=>{ const x=DOCS[r.i], n=NORM[r.i]; const a=Math.max(0,r.first-90), b=Math.min(n.raw.length,r.first+190);
+    let snip = (a?"…":"")+n.raw.slice(a,b)+(b<n.raw.length?"…":"");
+    snip = markTerms(esc(snip), ts);
+    return `<a class="res" href="#d/${x.c}/q${encodeURIComponent(q)}" style="--pc:${pc(porteOf(x))}"><div class="t">${esc(x.t)}</div><div class="w">${x.c} · ${PORTES[porteOf(x)].n} › ${esc(x.d.replace(/^\d+(\.\d+)?\s/,""))}</div><div class="s">${snip}</div></a>`; }).join("");
+  m.innerHTML = html + "</div>";
+}
+function markTerms(htmlText, ts){
+  const f = fold(htmlText); let out="", i=0;
+  const hits=[]; ts.forEach(t=>{ let p=f.indexOf(t); while(p>=0){ hits.push([p,p+t.length]); p=f.indexOf(t,p+t.length); } });
+  hits.sort((a,b)=>a[0]-b[0]); let last=0;
+  for(const [s,e] of hits){ if(s<last) continue; const pre=htmlText.slice(last,s); if(/&[a-z]*$/.test(pre)) continue; out+=pre+"<mark>"+htmlText.slice(s,e)+"</mark>"; last=e; }
+  return out+htmlText.slice(last);
+}
+function highlight(q){
+  const ts = terms(q); if(!ts.length) return; const doc=$("#doc");
+  const walker = document.createTreeWalker(doc, NodeFilter.SHOW_TEXT); const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+  let firstMark=null;
+  for(const n of nodes){ const f=fold(n.nodeValue); const hits=[]; ts.forEach(t=>{ let p=f.indexOf(t); while(p>=0){ hits.push([p,p+t.length]); p=f.indexOf(t,p+t.length); } });
+    if(!hits.length) continue; hits.sort((a,b)=>a[0]-b[0]);
+    const frag=document.createDocumentFragment(); let last=0;
+    for(const [s,e] of hits){ if(s<last) continue; frag.append(n.nodeValue.slice(last,s)); const mk=document.createElement("mark"); mk.textContent=n.nodeValue.slice(s,e); frag.append(mk); if(!firstMark) firstMark=mk; last=e; }
+    frag.append(n.nodeValue.slice(last)); n.replaceWith(frag); }
+  doc.querySelectorAll("mark").forEach(mk=>{ const d=mk.closest("details"); if(d) d.open=true; });
+  if(firstMark) setTimeout(()=>firstMark.scrollIntoView({behavior:"smooth",block:"center"}),80);
+}
+
+/* ---------- sauvegarde ---------- */
+async function exportData(){
+  const blob = new Blob([JSON.stringify({format:"veille", version:1, date:new Date().toISOString().slice(0,10), fav:P.fav, notes:P.notes}, null, 1)], {type:"application/json"});
+  const name = "Veille_favoris_notes_"+new Date().toISOString().slice(0,10)+".json";
+  let dl=null; try{ dl = await window.claude?.use?.("downloads"); }catch(e){}
+  if(dl){ try{ await dl.save({filename:name, data:blob}); return; }catch(e){ if(e&&e.code==="declined") return; } }
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); a.remove();
+}
+async function importData(e){
+  const f=e.target.files&&e.target.files[0]; e.target.value=""; if(!f) return; const m=$("#dmsg");
+  try{ const d=JSON.parse(await f.text()); if(d.format!=="veille") throw 0;
+    P.fav=[...new Set([...(d.fav||[]),...P.fav])]; P.notes=Object.assign({},P.notes,d.notes||{}); save(); showHome(); $("#dmsg").textContent="Favoris et notes restaurés."; }
+  catch(err){ m.textContent="Ce fichier n'est pas une sauvegarde de la veille (Veille_favoris_notes_….json)."; }
+}
+
+boot();
+</script>
+<script>if("serviceWorker" in navigator){addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));}</script></body></html>
