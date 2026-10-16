@@ -1,9 +1,215 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Veille"><meta name="theme-color" content="#16202E">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Veille"><meta name="theme-color" content="#0B3B36">
 <link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><link rel="icon" href="icon-192.png">
-</head><body><title>Veille de connaissances</title>
+<style>/* GRÜN — styles communs injectés dans chaque module (barre des pôles en bas, éléments partagés).
+   Les modules gardent leurs jetons (--bg, --panel, --ink, --mute, --line, --soft) au style Veille. */
+:root{--grun:#0F766E;--grun-ink:#0B3B36;--nav-h:62px}
+body.grun-has-nav{padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px))}
+#grun-nav{position:fixed;left:0;right:0;bottom:0;z-index:50;display:flex;justify-content:space-around;align-items:stretch;
+  background:var(--panel,#fff);border-top:1px solid var(--line,#D9DDE3);padding-bottom:env(safe-area-inset-bottom,0px);
+  box-shadow:0 -4px 18px rgba(0,0,0,.05)}
+#grun-nav a{flex:1;max-width:140px;min-height:var(--nav-h);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  text-decoration:none;color:var(--mute,#5D6675);font:600 11.5px/1.1 var(--ui,system-ui,sans-serif);letter-spacing:.01em}
+#grun-nav svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#grun-nav a.on{color:var(--ink,#16202E)}
+#grun-nav a.on svg{stroke:var(--grun)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) #grun-nav{box-shadow:none}}
+@media print{#grun-nav{display:none}body.grun-has-nav{padding-bottom:0}}
+/* fil « poupée russe » : bandeau de retour vers le module appelant */
+.grun-relais{position:sticky;top:0;z-index:40;display:flex;gap:10px;align-items:center;justify-content:space-between;
+  background:var(--grun);color:#fff;padding:8px 16px;font:600 14px/1.3 var(--ui,system-ui,sans-serif)}
+.grun-relais a,.grun-relais button{color:#fff;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);border-radius:8px;
+  min-height:36px;padding:0 12px;display:inline-flex;align-items:center;text-decoration:none;font:inherit;white-space:nowrap}
+.grun-mod #back{visibility:visible!important}
+/* mode simple / mode expert (GRUN.expert) : « xp » = réservé au mode expert ; « xs » = seulement en mode simple */
+html.grun-simple .xp{display:none!important}
+html.grun-expert .xs{display:none!important}
+/* « Plus d'options » : réglages fins et actions rares, repliés (même aspect dans tous les modules) */
+details.grun-plus{margin-top:14px;border:1px solid var(--line,#D9DDE3);border-radius:12px;background:var(--panel,#fff)}
+details.grun-plus>summary{list-style:none;cursor:pointer;min-height:46px;display:flex;align-items:center;gap:8px;padding:0 14px;font:600 15px/1.2 var(--ui,system-ui,sans-serif);color:var(--mute,#5D6675)}
+details.grun-plus>summary::-webkit-details-marker{display:none}
+details.grun-plus>summary::before{content:"+";font-weight:700;width:1em;color:var(--mute,#5D6675)}
+details.grun-plus[open]>summary::before{content:"–"}
+details.grun-plus>.grun-plusb{padding:0 14px 14px;display:flex;flex-direction:column;gap:10px}
+/* Grilles : bilan en cours + un gros bouton « Créer un nouveau bilan » */
+.bil1{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-top:14px;padding:12px 14px;border:1px solid var(--line,#D9DDE3);border-left:4px solid var(--acc,#0F766E);border-radius:12px;background:var(--panel,#fff)}
+.bil1 b{display:block;font-size:1.1rem}
+.bil1 small{color:var(--mute,#5D6675)}
+.go.big{min-height:46px;padding:0 18px;font-size:1.02rem}
+/* listes : colonne « code » masquée en mode simple (classe hasx sur la ligne, cx sur le code) */
+html.grun-simple .hasx{grid-template-columns:minmax(0,1fr)!important}
+html.grun-simple .cx{display:none!important}
+/* Grilles : « L'essentiel » en cartes sur téléphone ; toucher une ligne ouvre son détail */
+#doc table.cartes td.lgo{cursor:pointer;color:var(--acc,#0F766E);font-weight:700}
+@media (max-width:640px){
+  #doc table.cartes,#doc table.cartes tbody,#doc table.cartes tr,#doc table.cartes td{display:block;width:auto!important}
+  #doc table.cartes thead{display:none}
+  #doc table.cartes tr{padding:10px 12px;border-bottom:1px solid var(--line,#D9DDE3)}
+  #doc table.cartes td{border:none!important;padding:2px 0!important}
+  #doc table.cartes td.lgo{font-size:1.05em}
+  #doc table.cartes td.lgo::after{content:" ›"}
+  #doc table.cartes td:nth-child(3)::before{content:"Test ★ : ";font-weight:600;color:var(--mute,#5D6675)}
+}
+/* lignes de grille affichées en clair : les noms longs passent à la ligne */
+.lc{white-space:normal!important;overflow-wrap:anywhere;display:inline-block;max-width:100%}
+.boxh>div{min-width:0;flex:1 1 auto}
+/* bouton PDF commun (même aspect et même libellé « … PDF » dans tous les modules) : <button class="grun-pdf"><svg/><span>Rapport PDF</span></button> */
+.grun-pdf{display:inline-flex;align-items:center;gap:7px;min-height:42px;padding:0 14px;border-radius:10px;border:1.5px solid var(--grun,#0F766E);background:var(--panel,#fff);color:var(--grun,#0F766E);font:700 15px/1 var(--ui,system-ui,sans-serif);cursor:pointer;white-space:nowrap;text-decoration:none}
+.grun-pdf svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.grun-pdf:disabled{opacity:.6}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .grun-pdf{color:#2DD4BF;border-color:#2DD4BF}}
+:root[data-theme="dark"] .grun-pdf{color:#2DD4BF;border-color:#2DD4BF}
+
+/* ===================== SOCLE 1.1 « chemin ultra intuitif » =====================
+   RÈGLES DE MISE EN PAGE (toutes les pages) :
+   - retour « ‹ » en haut à gauche (#back) ; joueur en cours + « ? » en haut à droite (.grun-topx, injectés par GRUN.nav) ;
+   - action principale EN BAS, grande, dans la zone du pouce : <div class="grun-actbar"><button class="gs-btn main">…</button></div> ;
+   - options secondaires repliées : <details class="grun-plus"><summary>Plus d'options</summary><div class="grun-plusb">…</div></details> ;
+   - « + » unique au centre de la barre du bas (#grun-plus) ; créations dans une feuille (.grun-ov > .grun-sheet). */
+:root{--grun-hi:#0F766E;--grun-on:#fff}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--grun-hi:#2DD4BF;--grun-on:#0B1117}}
+:root[data-theme="dark"]{--grun-hi:#2DD4BF;--grun-on:#0B1117}
+/* « + » au centre de la barre du bas */
+#grun-nav #grun-plus{flex:0 0 64px;border:0;background:none;padding:0;display:flex;align-items:center;justify-content:center;min-height:var(--nav-h);cursor:pointer}
+#grun-nav #grun-plus span{width:48px;height:48px;border-radius:16px;background:var(--grun-hi);color:var(--grun-on);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(15,118,110,.35)}
+#grun-nav #grun-plus svg{width:26px;height:26px;stroke-width:2.6;stroke:currentColor}
+#grun-nav #grun-plus:active span{transform:scale(.94)}
+@media (max-width:380px){#grun-nav a{font-size:10.5px}#grun-nav #grun-plus{flex-basis:56px}}
+/* barre du haut : joueur en cours + aide */
+.grun-topx{display:inline-flex;gap:6px;align-items:center;flex:0 0 auto}
+.grun-chip{display:inline-flex;align-items:center;gap:6px;min-height:36px;max-width:118px;padding:0 10px 0 4px;border:1px solid var(--line,#D9DDE3);border-radius:999px;background:var(--panel,#fff);color:var(--ink,#16202E);font:600 14px/1 var(--ui,system-ui,sans-serif);cursor:pointer}
+.grun-chip .gc-nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.gc-av{flex:0 0 28px;width:28px;height:28px;border-radius:50%;background:var(--grun-hi);color:var(--grun-on);display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+.gc-av.g{border-radius:8px;background:#6D3FC0;color:#fff}
+.gc-av.vide{background:var(--soft,#ECEFF3);color:var(--mute,#5D6675)}
+.grun-q{width:36px;height:36px;border-radius:50%;border:1px solid var(--line,#D9DDE3);background:var(--panel,#fff);color:var(--mute,#5D6675);font:800 17px/1 var(--ui,system-ui,sans-serif);cursor:pointer;padding:0}
+@media (max-width:430px){.grun-chip{max-width:92px;padding-right:8px}.grun-chip .gc-nm{font-size:13px}}
+@media (max-width:360px){.grun-chip .gc-nm{display:none}.grun-chip{padding:0 4px}}
+/* feuille (bottom sheet) */
+.grun-ov{position:fixed;inset:0;z-index:200;background:rgba(10,16,24,.42);display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .16s ease}
+.grun-ov.in{opacity:1}.grun-ov.out{opacity:0}
+.grun-sheet{width:100%;max-width:560px;max-height:min(90vh,calc(100vh - env(safe-area-inset-top,0px) - 24px));display:flex;flex-direction:column;background:var(--panel,#fff);color:var(--ink,#16202E);border-radius:18px 18px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.25);transform:translateY(24px);transition:transform .18s ease;font-family:var(--ui,system-ui,sans-serif);font-size:16px;line-height:1.4}
+.grun-sheet.large{max-width:720px}
+.grun-ov.in .grun-sheet{transform:none}
+@media (min-width:700px){.grun-ov{align-items:center}.grun-sheet{border-radius:18px;max-height:86vh}}
+.gs-h{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px 8px;border-bottom:1px solid var(--line,#D9DDE3)}
+.gs-h b{font-family:var(--display,"Barlow Condensed",system-ui,sans-serif);font-size:1.45em;font-weight:700;line-height:1.1}
+.gs-x{width:40px;height:40px;border-radius:50%;border:0;background:var(--soft,#ECEFF3);color:var(--ink,#16202E);font-size:24px;line-height:1;cursor:pointer;flex:0 0 auto}
+.gs-b{padding:12px 16px 14px;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:12px;flex:1 1 auto;min-height:0}
+.gs-f{display:flex;gap:8px;padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line,#D9DDE3)}
+.gs-btn{min-height:52px;border-radius:13px;border:1px solid var(--line,#D9DDE3);background:var(--panel,#fff);color:var(--ink,#16202E);font:700 16px/1.1 var(--ui,system-ui,sans-serif);padding:0 16px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;gap:6px}
+.gs-btn.main{flex:1;background:var(--grun-hi);border-color:var(--grun-hi);color:var(--grun-on)}
+.gs-btn.sec{flex:0 1 auto}
+.gs-btn.sm{min-height:40px;font-size:14.5px;border-radius:10px;padding:0 12px;flex:0 0 auto}
+.gs-btn:disabled{opacity:.5}
+.grun-ov.danger .gs-btn.main{background:#B91C1C;border-color:#B91C1C;color:#fff}
+.gs-form{display:flex;flex-direction:column;gap:12px;margin:0}
+.gs-l{display:flex;flex-direction:column;gap:5px;font-weight:600;font-size:14.5px;color:var(--ink,#16202E);min-width:0}
+.gs-l small{font-weight:500;color:var(--mute,#5D6675)}
+.gs-inp{min-height:48px;border:1px solid var(--line,#D9DDE3);border-radius:11px;background:var(--bg,#F4F5F7);color:var(--ink,#16202E);padding:0 12px;font:500 17px/1.2 var(--ui,system-ui,sans-serif);width:100%;max-width:100%;box-sizing:border-box}
+.gs-ta{padding:10px 12px;min-height:84px;resize:vertical;line-height:1.4}
+.gs-inp:focus{outline:2px solid var(--grun-hi);outline-offset:1px}
+.gs-seg{display:flex;border:1px solid var(--line,#D9DDE3);border-radius:11px;overflow:hidden;background:var(--bg,#F4F5F7)}
+.gs-seg button{flex:1;min-height:46px;border:0;background:none;color:var(--ink,#16202E);font:600 16px/1 var(--ui,system-ui,sans-serif);cursor:pointer}
+.gs-seg button+button{border-left:1px solid var(--line,#D9DDE3)}
+.gs-seg button[aria-checked=true]{background:var(--grun-hi);color:var(--grun-on)}
+.gs-chips{display:flex;flex-wrap:wrap;gap:6px}
+.gs-chip{min-height:40px;border:1px solid var(--line,#D9DDE3);background:var(--panel,#fff);color:var(--ink,#16202E);border-radius:999px;padding:0 14px;font:600 15px/1 var(--ui,system-ui,sans-serif);cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gs-chips.big .gs-chip{min-height:46px;font-size:16px}
+.gs-chip.g{border-style:dashed}
+.gs-chip[aria-pressed=true]{background:var(--grun-hi);border-color:var(--grun-hi);color:var(--grun-on)}
+.gs-err{color:#B91C1C;font-weight:600;margin:0;min-height:0}
+.gs-err:empty{display:none}
+.gs-m{color:var(--mute,#5D6675);font-size:14.5px;margin:0}
+.gs-p{margin:0;font-size:16.5px;line-height:1.5}
+.gs-sert{color:var(--grun-hi);font-weight:600;font-size:13px}
+.gs-lien{align-self:flex-start;border:0;background:none;color:var(--grun-hi);font:700 15.5px/1.2 var(--ui,system-ui,sans-serif);padding:6px 0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.gs-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.gs-n .gs-inp{font-variant-numeric:tabular-nums}
+.gs-c{display:flex;gap:10px;align-items:flex-start;font-weight:600;font-size:15px}
+.gs-c input{width:22px;height:22px;flex:0 0 auto;margin-top:1px}
+.gs-c small{font-weight:500;color:var(--mute,#5D6675)}
+.gs-cp fieldset{border:1px solid var(--line,#D9DDE3);border-radius:13px;padding:10px 12px 12px;margin:0;display:flex;flex-direction:column;gap:10px;min-width:0}
+.gs-cp legend{font-weight:800;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute,#5D6675);padding:0 4px}
+.gs-cp legend small{text-transform:none;letter-spacing:0;font-weight:500}
+details.gs-plus>summary{cursor:pointer;color:var(--grun-hi);font-weight:700;padding:4px 0;list-style:none}
+details.gs-plus>summary::-webkit-details-marker{display:none}
+details.gs-plus[open]>summary{margin-bottom:8px}
+.gs-list{border:1px solid var(--line,#D9DDE3);border-radius:11px;overflow:hidden}
+.gs-row{display:flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline;padding:8px 12px;border-top:1px solid var(--line,#D9DDE3)}
+.gs-row:first-child{border-top:0}
+.gs-row span{color:var(--mute,#5D6675);font-size:14px}
+.gs-row small{flex-basis:100%;color:#B91C1C;font-weight:600}
+.gs-row.ko b{color:#B91C1C}
+.gs-menu{display:flex;flex-direction:column;gap:8px}
+.gs-menu.plus{display:grid;grid-template-columns:minmax(0,1fr);gap:6px}
+@media (min-width:560px){.gs-menu.plus{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.gs-it{display:grid;grid-template-columns:auto minmax(0,1fr);gap:1px 12px;align-items:center;text-align:left;min-height:60px;padding:9px 12px;border:1px solid var(--line,#D9DDE3);border-radius:13px;background:var(--panel,#fff);color:var(--ink,#16202E);text-decoration:none;cursor:pointer;font:inherit}
+.gs-it b{font-size:16.5px;grid-column:2}
+.gs-it span{grid-column:2;color:var(--mute,#5D6675);font-size:13.5px;line-height:1.3}
+.gs-it:not(:has(.pi)){grid-template-columns:minmax(0,1fr)}.gs-it:not(:has(.pi)) b,.gs-it:not(:has(.pi)) span{grid-column:1}
+.gs-it.x{border-color:var(--grun-hi);border-width:1.5px}
+.gs-it.st{cursor:default}
+.gs-it.st .gs-seg{grid-column:1/-1;margin-top:6px}
+.gs-it:active{background:var(--soft,#ECEFF3)}
+.pi{grid-row:1/3;width:38px;height:38px;border-radius:11px;background:var(--soft,#ECEFF3);position:relative}
+.pi::after{content:"";position:absolute;inset:9px;background:var(--grun-hi);-webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat}
+.pi-joueur{--m:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 21c0-4 4-6 8-6s8 2 8 6'/%3E%3C/svg%3E")}
+.pi-groupe{--m:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2'%3E%3Ccircle cx='8' cy='9' r='3'/%3E%3Ccircle cx='16' cy='9' r='3'/%3E%3Cpath d='M2 20c0-3 3-5 6-5s6 2 6 5M12 20c0-3 2-5 4-5s6 2 6 5'/%3E%3C/svg%3E")}
+.pi-session{--m:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M8 5v14l11-7z'/%3E%3C/svg%3E")}
+.pi-test{--m:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2'%3E%3Cpath d='M12 3l8.5 6.2-3.2 10H6.7L3.5 9.2z'/%3E%3C/svg%3E")}
+.pi-exo{--m:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2'%3E%3Cpath d='M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z'/%3E%3Cpath d='M4 19V5'/%3E%3C/svg%3E")}
+.pi-note{--m:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2'%3E%3Cpath d='M4 20h4L19 9l-4-4L4 16z'/%3E%3C/svg%3E")}
+.pi-wu{--m:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2'%3E%3Cpath d='M12 3c2 3 5 5 5 9a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-5 1-8z'/%3E%3C/svg%3E")}
+.gs-cur{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;padding:10px 12px;border-radius:13px;background:var(--soft,#ECEFF3)}
+.gs-cur b{font-size:17px}.gs-cur span{color:var(--mute,#5D6675);font-size:14px;flex:1}
+.gs-bar{display:flex;flex-direction:column;gap:5px}
+.gs-bar>div,.gc-bar{display:block;height:8px;border-radius:99px;background:var(--soft,#ECEFF3);overflow:hidden}
+.gs-bar i,.gc-bar i{display:block;height:100%;background:var(--grun-hi);border-radius:99px;transition:width .3s}
+/* toast avec « Annuler » */
+#grun-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h,62px) + 14px + env(safe-area-inset-bottom,0px));z-index:260;display:flex;gap:12px;align-items:center;max-width:calc(100vw - 32px);background:var(--ink,#16202E);color:var(--bg,#fff);padding:8px 8px 8px 16px;border-radius:13px;box-shadow:0 8px 28px rgba(0,0,0,.28);font:600 15px/1.3 var(--ui,system-ui,sans-serif)}
+#grun-toast:not(:has(button)){padding:11px 16px}
+#grun-toast button{min-height:40px;border:0;border-radius:9px;background:var(--grun-hi);color:var(--grun-on);font:800 15px/1 var(--ui,system-ui,sans-serif);padding:0 14px;cursor:pointer;white-space:nowrap}
+body:not(.grun-has-nav) #grun-toast{bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+#grun-saved{position:fixed;top:calc(8px + env(safe-area-inset-top,0px));right:12px;z-index:270;background:var(--grun-hi);color:var(--grun-on);font:700 13px/1 var(--ui,system-ui,sans-serif);padding:7px 11px;border-radius:99px;opacity:0;transform:translateY(-6px);transition:opacity .2s,transform .2s;pointer-events:none}
+#grun-saved.on{opacity:1;transform:none}
+/* barre de complétude (dossier) */
+.grun-compl{border:1px solid var(--line,#D9DDE3);border-radius:13px;background:var(--panel,#fff);padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.grun-compl .gc-h{display:flex;gap:10px;align-items:center}.grun-compl .gc-h b{white-space:nowrap}.grun-compl .gc-bar{flex:1}
+.grun-compl ul{margin:0;padding-left:18px;font-size:14.5px;color:var(--mute,#5D6675)}
+.grun-compl ul b{color:var(--ink,#16202E);font-weight:600}
+.grun-compl .gs-btn{align-self:flex-start}
+.grun-compl.ok{padding:8px 12px}
+/* action principale en bas (zone du pouce), au-dessus de la barre du bas */
+.grun-actbar{position:sticky;bottom:calc(var(--nav-h,62px) + env(safe-area-inset-bottom,0px) + 8px);z-index:20;display:flex;gap:8px;margin-top:16px}
+body:not(.grun-has-nav) .grun-actbar{bottom:calc(8px + env(safe-area-inset-bottom,0px))}
+.grun-actbar>*{flex:1;min-height:52px;box-shadow:0 6px 18px rgba(0,0,0,.14)}
+/* visite guidée, schéma */
+.gv h3{font-family:var(--display,"Barlow Condensed",system-ui,sans-serif);font-size:1.6em;margin:4px 0 6px;line-height:1.1}
+.gv-dots{display:flex;gap:5px}.gv-dots i{width:22px;height:5px;border-radius:9px;background:var(--line,#D9DDE3)}.gv-dots i.vu{background:var(--mute,#5D6675)}.gv-dots i.on{background:var(--grun-hi)}
+.grun-schema{width:100%;max-width:440px;display:block;margin:10px auto 0;font-family:var(--ui,system-ui,sans-serif)}
+.grun-schema rect{stroke-width:2}
+.grun-schema .s-ind{fill:rgba(15,118,110,.12);stroke:#0F766E}.grun-schema .s-tests{fill:rgba(109,63,192,.12);stroke:#6D3FC0}.grun-schema .s-res{fill:rgba(29,78,216,.10);stroke:#1D4ED8}.grun-schema .s-create{fill:rgba(194,65,12,.10);stroke:#C2410C}
+.grun-schema .s-d1{fill:rgba(194,65,12,.14);stroke:#C2410C}.grun-schema .s-d2{fill:rgba(194,65,12,.22);stroke:#C2410C}.grun-schema .s-d3{fill:#C2410C;stroke:#C2410C}
+.grun-schema text{fill:var(--ink,#16202E);text-anchor:middle}.grun-schema .s-t{font-weight:800;font-size:15px}.grun-schema .s-s{font-size:12px;fill:var(--mute,#5D6675)}
+.grun-schema .s-k{font-size:11px;font-weight:700;text-anchor:start}.grun-schema .s-k.c{text-anchor:middle;fill:#fff}
+.grun-doll{margin-top:8px}.grun-doll div{border:2px solid #C2410C;border-radius:12px;padding:8px 10px 10px;font-weight:800;color:#C2410C;background:rgba(194,65,12,.07)}.grun-doll div div{margin-top:6px;background:rgba(194,65,12,.12)}.grun-doll div div div{background:#C2410C;color:#fff}
+.grun-demo-bar{display:flex;gap:14px;align-items:center;justify-content:center;margin-top:8px}
+.grun-chip.demo{pointer-events:none}
+.grun-plus-demo{width:48px;height:48px;border-radius:16px;background:var(--grun-hi);color:var(--grun-on);display:inline-flex;align-items:center;justify-content:center;font:800 30px/1 var(--ui,system-ui,sans-serif)}
+html.grun-sheet-on body{overflow:hidden}
+@media print{.grun-topx,#grun-toast,#grun-saved,.grun-ov,.grun-actbar{display:none!important}}
+/* barre du haut des modules sur téléphone : le joueur en cours se réduit à son initiale, le titre s'abrège */
+html.grun-mod .topin .brand{min-width:0;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto}
+@media (max-width:430px){html.grun-mod .grun-chip .gc-nm{display:none}html.grun-mod .grun-chip{padding:0 3px;max-width:none}.grun-topx{gap:4px}.grun-q{width:34px;height:34px}}
+.grun-chip:has(.gc-av.vide){max-width:none}.grun-chip:has(.gc-av.vide) .gc-nm{overflow:visible}
+</style>
+<script>window.GRUN_SEUL={mod:"veille",base:"https://eliotgrn.github.io/GRUN/"};</script><script src="grun.js?v=1.4"></script>
+<script src="assistant.js?v=1.4"></script>
+<meta name="grun-module" content="veille"></head><body><title>Veille de connaissances</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
 <style>
 /* Layout : barre fixe (retour, recherche) ; accueil = recherche, accès direct, 4 portes, favoris ; document = fil d'Ariane, sommaire, L'essentiel ouvert, Le détail en sections dépliables */
@@ -109,6 +315,45 @@ mark{background:var(--mark);color:inherit;border-radius:2px}
 .tools{display:flex;flex-wrap:wrap;gap:8px}
 .msg{font-size:13.5px;color:var(--mute)}
 .load{padding:40px 0;color:var(--mute)}
+.lines{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;display:flex;flex-direction:column;gap:8px}
+.lines>b{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--mute)}
+.lrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.lrow>span{font-weight:600;font-size:14px;margin-right:4px}
+.lk{min-height:34px;border:1px solid var(--line);background:var(--bg);border-radius:999px;display:inline-flex;align-items:center;padding:0 12px;font-size:13.5px;font-weight:600;text-decoration:none;white-space:nowrap}
+.lk.pri{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.lgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+@media (max-width:640px){.lgrid{grid-template-columns:minmax(0,1fr)}}
+.resume{display:flex;flex-direction:column;gap:2px;text-decoration:none;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--pc);border-radius:12px;padding:12px 16px}
+.resume small{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--mute)}
+.resume b{font-size:16px} .resume span{color:var(--pc);font-size:14px;font-weight:600}
+details.toc>summary{cursor:pointer;font-weight:600;font-size:14px;list-style:none;min-height:30px;display:flex;align-items:center}
+details.toc>summary::-webkit-details-marker{display:none}
+details.toc>summary::before{content:"+";width:1.1em;color:var(--pc);font-weight:700}
+details.toc[open]>summary::before{content:"–"}
+/* « L'essentiel en 30 secondes », parcours de lecture, action principale en bas (§10) */
+.e30{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--pc,var(--ink));border-radius:12px;padding:10px 16px 12px}
+.e30>b{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--pc,var(--mute))}
+.e30 ul{margin:6px 0 0;padding-left:18px;font-family:var(--read);font-size:calc(var(--fs) - 1px);line-height:1.5}
+.e30 li{margin:4px 0;max-width:72ch} .e30 li::marker{color:var(--pc,var(--mute))}
+.e30 .msg{margin:6px 0 0;font-size:12.5px}
+.pcs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:900px){.pcs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.pcs{grid-template-columns:minmax(0,1fr)}}
+.pcx{display:flex;flex-direction:column;gap:4px;text-decoration:none;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;border-left:4px solid var(--pc);min-height:44px}
+.pcx b{font-family:var(--display);font-size:20px;line-height:1.1;color:var(--pc)} .pcx span{color:var(--mute);font-size:13.5px}
+.pcx small{font-size:12.5px;font-weight:600;color:var(--ink)} .pcx small.ok{color:var(--pc)}
+.pbar{height:5px;border-radius:9px;background:var(--soft);overflow:hidden;margin-top:2px} .pbar i{display:block;height:100%;background:var(--pc)}
+.steps{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.steps a{display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;text-decoration:none;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;align-items:start}
+.steps .n{width:30px;height:30px;border-radius:50%;border:2px solid var(--pc);color:var(--pc);display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
+.steps .lu .n{background:var(--pc);color:var(--bg)}
+.steps .tt b{display:block;font-size:15.5px} .steps .tt span{display:block;color:var(--mute);font-size:13.5px;margin-top:2px;font-family:var(--read)}
+.steps .tt em{font-style:normal;font-size:12px;font-weight:600;color:var(--pc)}
+.pcbar{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;background:var(--soft);border-radius:10px;padding:8px 12px;font-size:14px}
+.pcbar a{color:var(--pc);font-weight:600;text-decoration:none}
+.grun-actbar .gs-btn{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html.grun-simple .doc .bq{display:none} html:not(.grun-simple) .ref .sx{display:none}
+.lgrid a{font-size:13.5px;text-decoration:none;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 10px;border-left:4px solid var(--pc)}
 </style>
 
 <header class="top"><div class="topin">
@@ -122,7 +367,7 @@ mark{background:var(--mark);color:inherit;border-radius:2px}
 <script>
 "use strict";
 const PORTES = {
-  "1": {n:"Par âge", c:"--p1", s:"Un document par âge, de 0 à 3 ans à l'adulte : tout ce qui concerne cet âge au même endroit."},
+  "1": {n:"Par âge", c:"--p1", s:"Un document par âge, de 0 à 3 ans à 18 ans : tout ce qui concerne cet âge au même endroit."},
   "2": {n:"Préparation physique", c:"--p2", s:"Les 12 lignes des grilles, la musculation, l'échauffement, la prévention et les tests."},
   "3": {n:"Biomécanique", c:"--p3", s:"Les 13 coups du geste et les 11 lignes du déplacement, principes et âge par âge."},
   "4": {n:"Entraîner", c:"--p4", s:"Développement de l'enfant, analyse du jeu, sciences, planification, récupération, pédagogie, mental."}
@@ -130,9 +375,41 @@ const PORTES = {
 const PP = ["Force du bas du corps","Force du haut du corps","Gainage et stabilité du tronc","Puissance des jambes : sauts et pliométrie","Puissance du haut du corps et rotation","Vitesse et accélération","Freinage, changements de direction et agilité","Endurance aérobie","Répétition d'efforts intenses","Coordination, motricité fondamentale et rythme","Équilibre et proprioception","Mobilité et souplesse"];
 const GE = [["Service à plat","3.3.2"],["Service slicé","3.4.2"],["Service lifté","3.5.2"],["Coup droit lifté","3.7.2"],["Coup droit à plat","3.8.2"],["Coup droit slicé","3.9.2"],["Revers lifté","3.11.2"],["Revers à plat","3.12.2"],["Revers slicé","3.13.2"],["Volée de coup droit","3.15.2"],["Volée de revers","3.16.2"],["Smash","3.17.2"],["Amortie et touché de balle","3.18.3"]];
 const DE = ["Position d'attention","Allègement et reprise d'appuis","Démarrage et premiers pas","Déplacements latéraux","Déplacements vers l'avant et vers l'arrière","Pas d'ajustement et mise à distance","Appuis de frappe","Freinage et décélération","Changement de direction et réaccélération","Replacement","Enchaînements et liaison des actions"];
-const RADAR = "https://eliotgrn.github.io/Profil-radar/";
+const RADAR = "https://eliotgrn.github.io/GRUN/grilles.html";
+/* parcours de lecture : des documents existants, dans un ordre qui se lit d'une traite (aucun contenu nouveau) */
+const PARCOURS = [
+  {id:"demarrer", n:"Démarrer", c:"--p1", s:"Les repères de base pour entraîner un joueur de 4 à 18 ans, en 7 documents.", d:["1.0.1","4.1.3","4.2.6","4.4.11","2.14.1","2.16.1","4.7.6"]},
+  {id:"croissance", n:"Croissance et maturation", c:"--p1", s:"Le pic de croissance, l'âge biologique et ce qu'ils changent à l'entraînement.", d:["4.1.1","4.1.2","2.16.2","4.1.3","4.1.4","2.15.2","2.13.4"]},
+  {id:"fille", n:"Prévention chez la fille", c:"--p2", s:"Ce qui change chez la fille : maturation, genou, sauts, freinage, volumes, hygiène de vie.", d:["4.1.5","4.1.2","2.15.10","2.15.7","2.7.2","2.4.2","4.5.9"]},
+  {id:"echauffement", n:"Échauffement et récupération", c:"--p2", s:"Construire un échauffement, le retour au calme, puis récupérer, en tournoi aussi, et dormir.", d:["2.14.1","2.14.2","2.14.3","2.14.4","2.14.5","4.5.2","4.5.3","4.5.4","4.5.5"]},
+  {id:"saison", n:"Planifier une saison", c:"--p4", s:"De la démarche à la semaine type : cycles, programmation annuelle, compétitions, charge.", d:["4.4.1","4.4.3","4.4.8","4.4.9","4.4.10","4.4.2","4.4.12"], plus:["https://eliotgrn.github.io/GRUN/saisons.html","Voir les saisons de référence"]},
+  {id:"evaluer", n:"Évaluer et suivre", c:"--p2", s:"Organiser les tests et les bilans, lire les valeurs de référence, suivre la charge.", d:["2.16.1","2.16.2","2.16.11","2.16.12","2.16.13","2.16.15"], plus:["https://eliotgrn.github.io/GRUN/grilles.html","Ouvrir Grilles et tests"]}
+];
+const PCB = Object.fromEntries(PARCOURS.map(x=>[x.id,x]));
+const GR = window.GRUN || null;
+/* nom clair d'un document (sans code) : « Vitesse et accélération · Comprendre et développer » plutôt que « 2.6.1 » */
+function nomClair(x){ if(!x) return ""; const dos = String(x.d||"").replace(/^\d+(\.\d+)*\s/,"").replace(/^Ligne \d+ · /,"");
+  if(/^(Comprendre et développer|Âge par âge|Séances, routines|Technique|Ligne \d+ ·)/.test(x.t) && !/^\d|ans$/.test(x.t)) return dos + " · " + x.t.replace(/^Ligne \d+ · /,"").split(" : ")[0].replace(/, filles et garçons$/,"");
+  return x.t; }
+/* âge du joueur (ou du groupe) en cours, pour préremplir l'âge partout */
+function courant(){ try{ return GR&&GR.courant ? GR.courant.get() : null; }catch(e){ return null; } }
+function ageCourant(){ const c = courant(); if(!c) return null;
+  try{ if(c.t==="j") return GR.grilleConseillee(c.joueur);
+    const as = GR.groupes.joueurs(c.id).map(j=>GR.grilleConseillee(j)).filter(a=>a!=null).sort((a,b)=>a-b); return as.length ? as[Math.floor(as.length/2)] : null; }catch(e){ return null; } }
+const prenom = c => c ? (c.t==="j" ? String(c.nom||"").split(" ")[0] : c.nom) : "";
+function aide(cle){ try{ GR&&GR.aide&&GR.aide.ecran&&GR.aide.ecran(cle); }catch(e){} }
+function titre(t){ document.title = t ? t+" · Veille" : "Veille de connaissances"; }
+/* action principale en bas (zone du pouce) : [texte, href | fonction] */
+function actbar(t, act){ if(!t) return ""; return `<div class="grun-actbar"><${typeof act==="string"?`a href="${act}"`:"button type=\"button\" id=\"actmain\""} class="gs-btn main">${esc(t)}</${typeof act==="string"?"a":"button"}></div>`; }
+function e30HTML(x, court){ const e = x.e||[]; if(!e.length) return "";
+  return `<section class="e30"><b>L'essentiel en 30 secondes</b><ul>${e.slice(0, court?2:4).map(([a,b])=>`<li>${a?`<strong>${esc(a)}</strong>${b?" ":""}`:""}${esc(b)}</li>`).join("")}</ul>${court?"":`<p class="msg">Phrases tirées du bloc « L'essentiel » ci-dessous.</p>`}</section>`; }
 
-let DOCS = [], BY = {}, NORM = null;
+let DOCS = [], BY = {}, NORM = null, LV = {L:{}, g:{}}, REV = {};
+const LIGNES = {PP:PP, GE:GE.map(x=>x[0]), DE:DE};
+const LCOL = {PP:"var(--p2)", GE:"var(--p3)", DE:"var(--p3)"};
+const DOMN = {PP:"Préparation physique", GE:"Biomécanique du geste", DE:"Biomécanique du déplacement"};
+const okLig = l => /^(PP|GE|DE)\d{1,2}$/.test(l) && !!LIGNES[l.slice(0,2)][+l.slice(2)-1];
+const ligNom = l => LIGNES[l.slice(0,2)][+l.slice(2)-1];
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const fold = s => { let o=""; for(const ch of s){ const d=ch.normalize("NFD")[0]; o += (d||ch).toLowerCase(); } return o; };
@@ -141,23 +418,62 @@ const keyc = c => c.split(".").map(Number);
 /* ---------- préférences locales ---------- */
 const ST = "veille_v1";
 function load(){ try{ return JSON.parse(localStorage.getItem(ST)) || {}; }catch(e){ return {}; } }
-let P = Object.assign({fav:[], rec:[], notes:{}, fs:17, age:"10", dom:"PP", ligne:"0"}, load());
-function save(){ try{ localStorage.setItem(ST, JSON.stringify(P)); }catch(e){} }
+let P = Object.assign({fav:[], rec:[], notes:{}, fs:17, age:"10", dom:"PP", ligne:"0", lu:[], pc:null}, load());
+if(!Array.isArray(P.lu)) P.lu = [];
+function save(){ try{ if(window.GRUN) GRUN.save(ST,P); else localStorage.setItem(ST, JSON.stringify(P)); }catch(e){} }
 document.documentElement.style.setProperty("--fs", P.fs+"px");
 
 /* ---------- données ---------- */
 async function boot(){
+  if(window.GRUN){ GRUN.nav("res");
+    /* « ? » : une aide par écran */
+    [["veille","La veille : les 230 documents de la méthode. Commence par un parcours de lecture, ou choisis un âge et une ligne dans « Accès direct ». « Reprendre » rouvre le dernier document lu."],
+     ["veille/d","Un document : « L'essentiel en 30 secondes » en haut, puis « Mettre en pratique » (exercices, séance, grilles), puis le détail en sections dépliables. ☆ le garde en favori ; tes notes s'enregistrent seules."],
+     ["veille/parcours","Un parcours de lecture : quelques documents dans le bon ordre. Les étapes lues se cochent seules ; le bouton du bas ouvre la suivante."],
+     ["veille/p","Une porte de la veille : tous ses documents, rangés par dossier. Touche un titre pour l'ouvrir."],
+     ["veille/l","Tout sur une ligne de grille : exercices pour l'âge, séance prête à construire, grilles filles et garçons, puis les documents pour comprendre, situer l'âge et évaluer."],
+     ["veille/s","La recherche lit le texte complet des 230 documents. Touche un résultat : le document s'ouvre sur le passage surligné."]].forEach(([k,t])=>{ try{ GRUN.aide(k,t); }catch(e){} });
+    if(GRUN.isJoueur()){ $("#q").disabled=true; $("#main").innerHTML='<h1>Réservé au coach</h1><p class="lead">La veille de connaissances est réservée au coach. En mode joueur, retrouve ton dossier, tes séances et tes tests.</p><div class="sec tools"><button class="go" id="jback" type="button">← Retour</button><a class="ib" href="https://eliotgrn.github.io/GRUN/index.html">Mon dossier</a></div>';
+      $("#jback").onclick=()=>{ if(history.length>1) history.back(); else location.href="https://eliotgrn.github.io/GRUN/index.html"; }; return; } }
   try{
-    const r = await fetch("data.json"); const d = await r.json();
-    DOCS = d.docs; DOCS.forEach((x,i)=>{ x.i=i; BY[x.c]=x; });
+    const r = await fetch("data-veille.json"); const d = await r.json();
+    DOCS = d.docs; DOCS.forEach((x,i)=>{ x.i=i; BY[x.c]=x; }); PF = d.pf || null; PH = d.ph || {};
+    if(d.lv) LV = d.lv;
+    for(const [l,g] of Object.entries(LV.L||{})) for(const [k,cs] of Object.entries(g)) for(const c of cs) (REV[c]=REV[c]||[]).push([l,k]);
   }catch(e){ $("#main").innerHTML = '<div class="empty">La veille n\'a pas pu se charger. Vérifie la connexion pour la première ouverture, puis recharge la page.</div>'; return; }
   route();
-  setTimeout(buildIndex, 50);
+  setTimeout(precharger, 1500);
+  $("#q").addEventListener("focus", ()=>{ tousPaquets().catch(()=>{}); }, {once:true});
 }
-function buildIndex(){
-  if(NORM) return;
-  const tmp = document.createElement("div");
-  NORM = DOCS.map(x => { tmp.innerHTML = x.h; const t = (x.t+" \n "+tmp.textContent).replace(/\s+/g," "); return {raw:t, f:fold(t)}; });
+/* ---------- chargement rapide : index léger au démarrage (titres, dossiers, lignes), texte des documents par paquets (data-veille-<n>.json) chargés à la demande ---------- */
+let PF = null, PH = {}; const PAQ = {};
+function paquet(k){
+  if(!PF || !k) return Promise.resolve();
+  return PAQ[k] || (PAQ[k] = fetch(PF+k+".json"+(PH[k]?"?v="+PH[k]:"")).then(r=>{ if(!r.ok) throw new Error("paquet "+k); return r.json(); })
+    .then(o=>{ for(const c in o) if(BY[c]) BY[c].h = o[c]; }).catch(e=>{ delete PAQ[k]; throw e; }));
+}
+function tousPaquets(){ return Promise.all([...new Set(DOCS.filter(x=>x.h==null).map(x=>x.k))].map(paquet)); }
+/* en arrière-plan, un paquet à la fois : la recherche tapée ensuite est immédiate */
+function precharger(){ const k = (DOCS.find(x=>x.h==null)||{}).k; if(!k) return; paquet(k).then(()=>setTimeout(precharger, 120), ()=>{}); }
+const ENT = {amp:"&", lt:"<", gt:">", quot:'"', apos:"'", nbsp:" "};
+const texte = h => h.replace(/<[^>]*>/g,"").replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m,e)=> e[0]==="#" ? String.fromCodePoint(e[1]==="x"||e[1]==="X" ? parseInt(e.slice(2),16) : +e.slice(1)) : (ENT[e.toLowerCase()] ?? m));
+/* recherche plein texte directement dans le HTML des paquets (sans index à construire) : expression insensible à la casse et aux accents, occurrences hors balises */
+const ACC = {a:"aàáâãäå", e:"eèéêë", i:"iìíîï", o:"oòóôõö", u:"uùúûü", c:"cç", n:"nñ", y:"yýÿ"};
+const motif = t => new RegExp([...t].map(ch => ACC[ch] ? "["+ACC[ch]+"]" : ch.replace(/[.*+?^${}()|[\]\\\/-]/g, "\\$&")).join(""), "gi");
+function compte(s, re, html){ re.lastIndex = 0; let c = 0, first = -1, m;
+  while(c < 60 && (m = re.exec(s))){ const i = m.index;
+    if(html && s.lastIndexOf("<", i) > s.lastIndexOf(">", i)){ const g = s.indexOf(">", i); re.lastIndex = g < 0 ? s.length : g + 1; continue; }
+    if(first < 0) first = i; c++; }
+  return [c, first]; }
+function extrait(x, first, ts){ const h = x.h;
+  if(first < 0) return texte(h.slice(0, 1500).replace(/<[^>]*$/, "")).replace(/\s+/g," ").trim().slice(0, 280) + "…";
+  const a = Math.max(0, first - 700), b = first + 1200; let s = h.slice(a, b);
+  if(a > 0){ const g = s.indexOf(">"), l = s.indexOf("<"); if(g >= 0 && (l < 0 || g < l)) s = s.slice(g + 1); }
+  s = s.replace(/<[^>]*$/, "");
+  const t = texte(s).replace(/\s+/g," "), f = fold(t); let p = -1;
+  for(const w of ts){ const q = f.indexOf(w); if(q >= 0 && (p < 0 || q < p)) p = q; }
+  if(p < 0) p = 0; const u = Math.max(0, p - 90), v = Math.min(t.length, p + 190);
+  return (a > 0 || u > 0 ? "…" : "") + t.slice(u, v) + (v < t.length || b < h.length ? "…" : "");
 }
 
 /* ---------- routage ---------- */
@@ -166,7 +482,9 @@ $("#back").onclick = () => { if(history.length > 1) history.back(); else locatio
 function route(){
   const h = decodeURIComponent(location.hash.slice(1));
   const m = $("#main"); window.scrollTo(0,0);
+  if(h.startsWith("/l/")) return showLigne(h.slice(3).split("?")[0], (h.split("?")[1]||"").match(/a=(\d+)/));
   if(h.startsWith("d/")) return showDoc(h.slice(2).split("/")[0], h.split("/")[2]);
+  if(h.startsWith("/parcours/")) return showParcours(h.slice(10));
   if(h.startsWith("p/")) return showPorte(h.slice(2));
   if(h.startsWith("s/")) { $("#q").value = h.slice(2); return showSearch(h.slice(2)); }
   showHome();
@@ -175,39 +493,67 @@ function porteOf(x){ return x.c[0]; }
 function pc(p){ return `var(${PORTES[p].c})`; }
 
 /* ---------- accueil ---------- */
+function pcLus(x){ return x.d.filter(c=>P.lu.includes(c)).length; }
 function showHome(){
-  document.documentElement.style.setProperty("--acc", "var(--ink)");
+  document.documentElement.style.setProperty("--acc", "var(--ink)"); titre("");
   const m = $("#main");
   const count = p => DOCS.filter(x=>porteOf(x)===p).length;
-  let html = `<h1>Veille de connaissances</h1><p class="lead">Préparation physique et biomécanique du tennis · ${DOCS.length} documents · toutes les ressources réunies en un seul modèle</p>`;
+  const c = courant(), ac = ageCourant();
+  let html = `<h1>Veille de connaissances</h1><p class="lead">Préparation physique et biomécanique du tennis · ${DOCS.length} documents</p>`;
+  const L = P.last && BY[P.last.c] ? P.last : null;
+  if(L) html += `<div class="sec"><a class="resume" href="#d/${L.c}${L.s?"/"+L.s:""}" style="--pc:${pc(porteOf(BY[L.c]))}"><small>Reprendre où j'en étais</small><b>${esc(nomClair(BY[L.c]))}</b>${L.st?`<span>${esc(L.st)}</span>`:""}</a></div>`;
+  html += `<div class="sec"><h2>Parcours de lecture</h2><p class="msg" style="margin:-4px 0 8px">Quelques documents dans le bon ordre, à lire d'une traite. Les étapes lues se cochent seules.</p><div class="pcs">${PARCOURS.map(x=>{ const n=pcLus(x), t=x.d.length;
+      return `<a class="pcx" href="#/parcours/${x.id}" style="--pc:var(${x.c})"><b>${esc(x.n)}</b><span>${esc(x.s)}</span><small class="${n===t?"ok":""}">${n===t?"✓ Lu en entier":n?`${n} sur ${t} lus`:`${t} documents`}</small><div class="pbar"><i style="width:${Math.round(n/t*100)}%"></i></div></a>`; }).join("")}</div></div>`;
   html += `<div class="sec"><h2>Accès direct</h2><div class="quick">
-    <div class="f"><label for="qa">Âge</label><select id="qa">${["0-3","3",...Array.from({length:15},(_,i)=>String(i+4)),"adulte"].map(a=>`<option value="${a}">${a==="adulte"?"Adulte":a==="0-3"?"0 à 3 ans":a+" ans"}</option>`).join("")}</select></div>
+    <div class="f"><label for="qa">Âge${c&&ac?` · ${esc(prenom(c))}`:""}</label><select id="qa">${["0-3","3",...Array.from({length:15},(_,i)=>String(i+4))].map(a=>`<option value="${a}">${a==="0-3"?"0 à 3 ans":a+" ans"}</option>`).join("")}</select></div>
     <div class="f"><label for="qd">Domaine</label><select id="qd"><option value="AGE">Tout l'âge (document de l'âge)</option><option value="PP">Préparation physique</option><option value="GE">Biomécanique du geste</option><option value="DE">Biomécanique du déplacement</option></select></div>
     <div class="f" id="qlw" style="flex:1;min-width:200px"><label for="ql">Ligne</label><select id="ql"></select></div>
-    <button class="go" id="qgo" type="button">Ouvrir</button></div></div>`;
-  html += `<div class="sec"><h2>Les portes</h2><div class="doors">${Object.entries(PORTES).map(([p,o])=>`<a class="door" href="#p/${p}" style="--pc:var(${o.c})"><b>${p} · ${o.n}</b><span>${o.s}</span><small>${count(p)} documents</small></a>`).join("")}</div>
-    <p class="msg" style="margin-top:8px">La banque d'exercices est une appli séparée.</p></div>`;
+    <button class="go" id="qgo" type="button">Ouvrir</button><button class="ib" id="qline" type="button">Tout sur cette ligne</button></div></div>`;
+  html += `<div class="sec"><h2>Les portes</h2><div class="doors">${Object.entries(PORTES).map(([p,o])=>`<a class="door" href="#p/${p}" style="--pc:var(${o.c})"><b>${o.n}</b><span>${o.s}</span><small>${count(p)} documents</small></a>`).join("")}</div>
+    <p class="msg" style="margin-top:8px">Les exercices de chaque ligne sont dans la <a class="ref" href="https://eliotgrn.github.io/GRUN/banque.html">banque d'exercices</a> ; les tests et les bilans dans <a class="ref" href="https://eliotgrn.github.io/GRUN/grilles.html">Grilles et tests</a>.</p></div>`;
+  html += `<div class="sec"><h2>Par ligne de grille</h2><p class="msg" style="margin:-4px 0 8px">Tous les documents d'une ligne : comprendre, âge par âge, séances, biomécanique, tests.</p>${["PP","GE","DE"].map(d=>`<details class="fold" style="--pc:${LCOL[d]}" ${d==="PP"?"open":""}><summary style="cursor:pointer;font-weight:600;padding:6px 0">${DOMN[d]}</summary><div class="lgrid">${LIGNES[d].map((n,i)=>`<a href="#/l/${d}${i+1}${ac?`?a=${ac}`:""}">${esc(n)}</a>`).join("")}</div></details>`).join("")}</div>`;
   const favs = P.fav.filter(c=>BY[c]), recs = P.rec.filter(c=>BY[c]).slice(0,8);
   html += `<div class="sec"><h2>Favoris</h2>${favs.length ? listHTML(favs.map(c=>BY[c]), true) : '<div class="empty">Touche ☆ en haut d\'un document pour le retrouver ici.</div>'}</div>`;
   if(recs.length) html += `<div class="sec"><h2>Consultés récemment</h2>${listHTML(recs.map(c=>BY[c]), true)}</div>`;
-  html += `<div class="sec"><h2>Mes données</h2><div class="tools">
-     <button class="ib" id="bsave" type="button">Sauvegarder favoris et notes</button>
-     <label class="ib" for="frest">Restaurer</label><input id="frest" type="file" accept=".json,application/json" hidden>
+  html += `<details class="grun-plus"><summary>Plus d'options</summary><div class="grun-plusb"><div class="tools">
+     <button class="ib" id="bsave" type="button">${GR&&GR.TXT?GR.TXT.sauver:"Tout sauvegarder"}</button>
+     <label class="ib" for="frest">${GR&&GR.TXT?GR.TXT.restaurer:"Restaurer une sauvegarde"}</label><input id="frest" type="file" accept=".json,application/json" hidden>
      <button class="ib" id="fsm" type="button" aria-label="Texte plus petit">A−</button><button class="ib" id="fsp" type="button" aria-label="Texte plus grand">A+</button>
-     <a class="ib" href="${RADAR}" target="_blank" rel="noopener">Profil radar ↗</a></div><p class="msg" id="dmsg">Favoris et notes sont gardés sur cet appareil.</p></div>`;
+     <a class="ib" href="${RADAR}">Profil radar</a></div><p class="msg" id="dmsg">Une seule sauvegarde pour tout GRÜN (favoris, notes et parcours de la veille compris). Les anciennes sauvegardes Veille_favoris_notes_….json sont acceptées.</p></div></details>`;
+  const p0 = PARCOURS.find(x=>pcLus(x)<x.d.length) || PARCOURS[0];
+  html += L ? actbar("Reprendre : "+nomClair(BY[L.c]), `#d/${L.c}${L.s?"/"+L.s:""}`) : actbar(`Commencer le parcours « ${p0.n} »`, `#/parcours/${p0.id}`);
   m.innerHTML = html;
   const qa=$("#qa"), qd=$("#qd"), ql=$("#ql");
-  qa.value=P.age; qd.value=P.dom;
+  if(![...qa.options].some(o=>o.value===P.age)) P.age="10"; qa.value = ac ? String(ac) : P.age; qd.value=P.dom;
   const fill=()=>{ const d=qd.value; $("#qlw").hidden = d==="AGE"; const L = d==="PP"?PP : d==="GE"?GE.map(x=>x[0]) : d==="DE"?DE : [];
     ql.innerHTML = L.map((n,i)=>`<option value="${i}">${i+1} · ${esc(n)}</option>`).join(""); if(+P.ligne < L.length) ql.value=P.ligne; };
   fill(); qd.onchange=()=>{ P.ligne="0"; fill(); };
   $("#qgo").onclick=()=>{ P.age=qa.value; P.dom=qd.value; P.ligne=ql.value||"0"; save(); quickGo(qa.value, qd.value, +ql.value); };
+  $("#qline").hidden = qd.value==="AGE"; qd.addEventListener("change",()=>{ $("#qline").hidden = qd.value==="AGE"; });
+  $("#qline").onclick=()=>{ if(qd.value==="AGE") return; P.age=qa.value; P.dom=qd.value; P.ligne=ql.value||"0"; save(); location.hash=`/l/${qd.value}${(+ql.value||0)+1}`+(/^\d+$/.test(qa.value)?`?a=${qa.value}`:""); };
   $("#bsave").onclick=exportData; $("#frest").onchange=importData;
   $("#fsm").onclick=()=>setFs(-1); $("#fsp").onclick=()=>setFs(1);
 }
+/* ---------- parcours de lecture ---------- */
+function showParcours(id){
+  const x = PCB[id]; if(!x) return showHome();
+  document.documentElement.style.setProperty("--acc", `var(${x.c})`); titre("Parcours · "+x.n);
+  P.pc = id; save();
+  const ds = x.d.filter(c=>BY[c]), n = pcLus(x), suiv = ds.find(c=>!P.lu.includes(c));
+  const m = $("#main"); m.style.setProperty("--pc", `var(${x.c})`);
+  m.innerHTML = `<div class="crumb"><a href="#">Veille</a>›<span>Parcours de lecture</span></div><h1 style="color:var(${x.c});margin-top:4px">${esc(x.n)}</h1><p class="lead">${esc(x.s)}</p>
+    <p class="msg" style="margin-top:6px">${n===ds.length?"✓ Parcours lu en entier.":n?`${n} sur ${ds.length} documents lus.`:`${ds.length} documents · l'essentiel de chacun se lit en 30 secondes.`}</p>
+    <ol class="steps">${ds.map((c,i)=>{ const d=BY[c], lu=P.lu.includes(c), e=(d.e||[])[0];
+      return `<li class="${lu?"lu":""}"><a href="#d/${c}"><span class="n">${lu?"✓":i+1}</span><span class="tt"><b>${esc(nomClair(d))}</b>${e?`<span>${esc((e[0]?e[0]+" ":"")+e[1])}</span>`:""}${c===suiv?`<em>À lire maintenant</em>`:""}</span></a></li>`; }).join("")}</ol>
+    ${x.plus?`<p class="msg" style="margin-top:12px">Et ensuite : <a class="ref" href="${x.plus[0]}">${esc(x.plus[1])}</a></p>`:""}
+    ${n?`<details class="grun-plus"><summary>Plus d'options</summary><div class="grun-plusb"><div class="tools"><button class="ib" id="praz" type="button">Remettre ce parcours à zéro</button></div></div></details>`:""}
+    ${actbar(suiv ? (n ? "Continuer : " : "Commencer : ")+nomClair(BY[suiv]) : "Relire depuis le début", "#d/"+(suiv||ds[0]))}`;
+  const rz = $("#praz"); if(rz) rz.onclick = ()=>{ const av = P.lu.slice(); P.lu = P.lu.filter(c=>!x.d.includes(c)); save(); showParcours(id);
+    if(GR&&GR.ui&&GR.ui.annuler) GR.ui.annuler("Parcours remis à zéro", ()=>{ P.lu = av; save(); showParcours(id); }); };
+}
 function setFs(d){ P.fs=Math.max(14,Math.min(24,P.fs+d)); save(); document.documentElement.style.setProperty("--fs",P.fs+"px"); const m=$("#dmsg"); if(m) m.textContent="Taille du texte des documents : "+P.fs+" px."; }
 function quickGo(age, dom, i){
-  const ageCode = {"0-3":"1.1.1","3":"1.1.2","adulte":"1.1.18"}[age] || ("1.1."+(+age-1));
+  const ageCode = {"0-3":"1.1.1","3":"1.1.2"}[age] || ("1.1."+(Math.min(18,+age||10)-1));
   let code = ageCode;
   if(dom==="PP") code = `2.${i+1}.2`;
   if(dom==="GE") code = GE[i][1];
@@ -215,7 +561,7 @@ function quickGo(age, dom, i){
   location.hash = `d/${code}` + (dom!=="AGE" && /^\d+$/.test(age) ? `/a${age}` : "");
 }
 function listHTML(xs, withPath){
-  return `<div class="list">${xs.map(x=>`<a class="li" href="#d/${x.c}"><span class="code">${x.c}</span><span class="tt">${esc(x.t)}${withPath?`<small>${esc(x.d.replace(/^\d+(\.\d+)?\s/,""))}</small>`:""}</span></a>`).join("")}</div>`;
+  return `<div class="list">${xs.map(x=>`<a class="li hasx" href="#d/${x.c}"><span class="code cx">${x.c}</span><span class="tt">${esc(x.t)}${withPath?`<small>${esc(x.d.replace(/^\d+(\.\d+)?\s/,""))}</small>`:""}</span></a>`).join("")}</div>`;
 }
 
 /* ---------- porte ---------- */
@@ -224,7 +570,8 @@ function showPorte(p){
   document.documentElement.style.setProperty("--acc", pc(p));
   const xs = DOCS.filter(x=>porteOf(x)===p), groups = {};
   xs.forEach(x=>{ (groups[x.d] = groups[x.d] || []).push(x); });
-  let html = `<div class="crumb" style="--pc:${pc(p)}"><a href="#">Accueil</a></div><h1 style="color:${pc(p)}">${p} · ${PORTES[p].n}</h1><p class="lead">${PORTES[p].s}</p>`;
+  titre(PORTES[p].n);
+  let html = `<div class="crumb" style="--pc:${pc(p)}"><a href="#">Veille</a></div><h1 style="color:${pc(p)}">${PORTES[p].n}</h1><p class="lead">${PORTES[p].s}</p>`;
   html += Object.entries(groups).map(([d,arr])=>`<div class="fold" style="--pc:${pc(p)}"><h3>${esc(d)}</h3>${listHTML(arr,false)}</div>`).join("");
   $("#main").innerHTML = html;
 }
@@ -232,20 +579,33 @@ function showPorte(p){
 /* ---------- document ---------- */
 function showDoc(code, hint){
   const x = BY[code]; if(!x) return showHome();
+  if(x.h==null){ const h0 = location.hash, tm = setTimeout(()=>{ if(location.hash===h0) $("#main").innerHTML = '<div class="load">Ouverture du document…</div>'; }, 150);
+    const ko = ()=>{ clearTimeout(tm); if(location.hash===h0) $("#main").innerHTML = '<div class="empty">Ce document n\'a pas pu se charger. Vérifie la connexion pour la première ouverture, puis réessaie.</div>'; };
+    paquet(x.k).then(()=>{ if(x.h==null) return ko(); clearTimeout(tm); if(location.hash===h0) showDoc(code, hint); }, ko); return; }
   const p = porteOf(x); document.documentElement.style.setProperty("--acc", pc(p));
-  P.rec = [code, ...P.rec.filter(c=>c!==code)].slice(0,20); save();
+  P.rec = [code, ...P.rec.filter(c=>c!==code)].slice(0,20); if(!P.lu.includes(code)) P.lu.push(code); save(); titre(nomClair(x));
   const sib = DOCS.filter(y=>y.d===x.d), k = sib.indexOf(x), prev = sib[k-1], next = sib[k+1];
   const fav = P.fav.includes(code);
+  const pcx = P.pc && PCB[P.pc] && PCB[P.pc].d.includes(code) ? PCB[P.pc] : null, pk = pcx ? pcx.d.indexOf(code) : -1, pnext = pcx ? BY[pcx.d[pk+1]] : null;
+  const lsx = [...new Set((REV[code]||[]).map(y=>y[0]))], ageDoc = hint && hint.startsWith("a") ? +hint.slice(1) : (ageCourant() || (/^\d+$/.test(P.age) ? +P.age : 10));
   const m = $("#main"); m.style.setProperty("--pc", pc(p));
-  m.innerHTML = `<div class="crumb"><a href="#">Accueil</a>›<a href="#p/${p}">${p} · ${PORTES[p].n}</a>›<span>${esc(x.d)}</span></div>
+  m.innerHTML = `<div class="crumb"><a href="#">Veille</a>›<a href="#p/${p}">${PORTES[p].n}</a>›<span>${esc(x.d.replace(/^\d+(\.\d+)*\s/,""))}</span></div>
     <div class="dochead"><h1>${esc(x.t)}</h1><div class="acts">
-      <button class="ib star" id="fav" type="button" aria-pressed="${fav}">${fav?"★ Favori":"☆ Favori"}</button>
-      <button class="ib" id="fsm" type="button" aria-label="Texte plus petit">A−</button><button class="ib" id="fsp" type="button" aria-label="Texte plus grand">A+</button></div></div>
-    <div class="crumb" style="margin-top:4px">${esc(x.ch||"")} · document ${x.c}</div>
-    <nav class="toc" id="toc" hidden></nav>
+      <button class="ib star" id="fav" type="button" aria-pressed="${fav}">${fav?"★ Favori":"☆ Favori"}</button></div></div>
+    <div class="crumb xp" style="margin-top:4px">${esc(x.ch||"")} · document ${x.c}</div>
+    ${pcx?`<div class="pcbar">Parcours <a href="#/parcours/${pcx.id}">${esc(pcx.n)}</a><span>étape ${pk+1} sur ${pcx.d.length}</span></div>`:""}
+    ${e30HTML(x)}
+    ${linesBox(code, ageDoc)}
+    <details class="toc" id="toc" hidden></details>
     <article class="doc" id="doc"></article>
     <div class="pn">${prev?`<a href="#d/${prev.c}"><small>‹ Précédent</small>${esc(prev.t)}</a>`:"<span></span>"}${next?`<a class="nx" href="#d/${next.c}"><small>Suivant ›</small>${esc(next.t)}</a>`:"<span></span>"}</div>
-    <div class="notes"><label for="nt" style="font-weight:600">Mes notes sur ce document</label><textarea id="nt" placeholder="Idées, joueurs concernés, à tester…"></textarea><div class="msg" id="ntm"></div></div>`;
+    <div class="notes"><label for="nt" style="font-weight:600">Mes notes sur ce document</label><textarea id="nt" placeholder="Idées, joueurs concernés, à tester…"></textarea><div class="msg" id="ntm"></div></div>
+    <details class="grun-plus"><summary>Plus d'options</summary><div class="grun-plusb"><div class="tools">
+      <button class="ib" id="fsm" type="button" aria-label="Texte plus petit">A−</button><button class="ib" id="fsp" type="button" aria-label="Texte plus grand">A+</button>
+      <a class="ib" href="#p/${p}">Tous les documents · ${esc(PORTES[p].n)}</a></div><p class="msg" id="dmsg"></p></div></details>
+    ${pcx ? (pnext ? actbar("Étape suivante : "+nomClair(pnext), "#d/"+pnext.c) : actbar("Parcours terminé · revoir les étapes", "#/parcours/"+pcx.id))
+      : lsx.length && lsx.length<=4 ? actbar("Créer une séance · "+ligNom(lsx[0]), ()=>0) : next ? actbar("Suivant : "+nomClair(next), "#d/"+next.c) : ""}`;
+  const am = $("#actmain"); if(am){ am.dataset.sess = lsx[0]; am.dataset.age = ageDoc; }
   // structure : L'essentiel encadré, Le détail en sections dépliables
   const doc = $("#doc"); const tmp = document.createElement("div"); tmp.innerHTML = x.h;
   tmp.querySelectorAll("table").forEach(t=>{ const w=document.createElement("div"); w.className="tw"; t.replaceWith(w); w.appendChild(t); });
@@ -262,17 +622,63 @@ function showDoc(code, hint){
     }
     (cur || doc).appendChild(node);
   }
-  if(sections.length>2){ const toc=$("#toc"); toc.hidden=false; toc.innerHTML = `<b>Le détail</b><ol>${sections.map(([id,t])=>`<li><a href="#" data-s="${id}">${esc(t.replace(/^\d+\.\s*/,""))}</a></li>`).join("")}</ol>`;
-    toc.onclick = e=>{ const a=e.target.closest("a[data-s]"); if(!a) return; e.preventDefault(); const d=document.getElementById(a.dataset.s); d.open=true; d.scrollIntoView({behavior:"smooth",block:"start"}); }; }
+  if(sections.length>2){ const toc=$("#toc"); toc.hidden=false; toc.open = matchMedia("(min-width:900px)").matches;
+    toc.innerHTML = `<summary>Sommaire · ${sections.length} sections</summary><ol>${sections.map(([id,t])=>`<li><a href="#d/${code}/${id}" data-s="${id}">${esc(t.replace(/^\d+\.\s*/,""))}</a></li>`).join("")}</ol>`;
+    toc.onclick = e=>{ const a=e.target.closest("a[data-s]"); if(!a) return; e.preventDefault(); history.replaceState(null,"","#d/"+code+"/"+a.dataset.s); ouvrirSection(a.dataset.s); }; }
   if(sections.length===1){ doc.querySelector("details").open = true; }
+  if(window.GRUN&&GRUN.clair) GRUN.clair(document.getElementById("doc"));   /* lignes de grille en clair (mode simple) */
+  refsClaires(doc);
   // favoris, taille, notes
   $("#fav").onclick = ()=>{ const on = !P.fav.includes(code); P.fav = on ? [code,...P.fav] : P.fav.filter(c=>c!==code); save(); $("#fav").setAttribute("aria-pressed",on); $("#fav").textContent = on?"★ Favori":"☆ Favori"; };
   $("#fsm").onclick=()=>setFs(-1); $("#fsp").onclick=()=>setFs(1);
   const nt=$("#nt"); nt.value = P.notes[code]||""; let tm;
   nt.oninput = ()=>{ clearTimeout(tm); tm=setTimeout(()=>{ if(nt.value.trim()) P.notes[code]=nt.value; else delete P.notes[code]; save(); $("#ntm").textContent="Note enregistrée sur cet appareil."; },500); };
-  // aller à un âge ou surligner une recherche
-  if(hint && hint.startsWith("a")) goAge(+hint.slice(1));
+  // reprendre : dernière section ouverte de ce document
+  P.last = {c:code, s:null, st:""}; save();
+  doc.addEventListener("toggle", e=>{ const d=e.target; if(d.tagName!=="DETAILS"||!d.open||!/^s\d+$/.test(d.id)) return; P.last={c:code, s:d.id, st:d.querySelector("summary").textContent.replace(/^\d+\.\s*/,"")}; save(); }, true);
+  // aller à un âge, à une section ou surligner une recherche
+  if(hint && /^s\d+$/.test(hint)) ouvrirSection(hint);
+  else if(hint && hint.startsWith("a")) goAge(+hint.slice(1));
   else if(hint && hint.startsWith("q")) highlight(hint.slice(1));
+}
+/* renvois « 2.4.1 » : en mode simple, le code laisse place au nom du document (le code reste visible en mode expert) */
+function refsClaires(root){
+  root.querySelectorAll("a.ref[href^='#d/']").forEach(a=>{ const c=a.getAttribute("href").slice(3), y=BY[c]; if(!y || a.textContent.trim()!==c) return;
+    const nx = a.nextSibling, t = nx && nx.nodeType===3 ? nx.nodeValue : "";
+    if(t && t.trimStart().startsWith(y.t.slice(0, 18))){ a.innerHTML = `<span class="xp">${c} </span>`; a.appendChild(document.createTextNode(t.trimStart())); nx.remove(); return; }
+    a.innerHTML = `<span class="xp">${c}</span><span class="sx">${esc(nomClair(y))}</span>`; });
+}
+function ouvrirSection(id){ const d=document.getElementById(id); if(!d||d.tagName!=="DETAILS") return; d.open=true; setTimeout(()=>{ d.scrollIntoView({behavior:"smooth",block:"start"}); d.querySelector("summary").classList.add("flash"); },60); }
+/* créer une séance sur une ligne : relais vers Create my session (séance pré-remplie avec les exercices de la ligne),
+   pour le joueur ou le groupe en cours (composant commun G.ui.session : durée, lieu, matériel du coach) */
+document.addEventListener("click", e=>{ const b=e.target.closest("[data-sess]"); if(!b) return; e.preventDefault();
+  const l=b.dataset.sess, retour="index.html"+location.hash, c=courant();
+  const rel = {de:"veille", vers:"seances", retour, lignes:[l], theme:ligNom(l), titre:ligNom(l), type:l.startsWith("PP")?"PPI":"TI"};
+  if(!(c && ageCourant())) rel.age = +b.dataset.age||null;
+  if(GR&&GR.ui&&GR.ui.session){ try{ GR.ui.session({relais:rel}); return; }catch(x){ console.warn(x); } }
+  if(GR&&GR.relais){ try{ GR.relais.envoyer(Object.assign(rel, {age:+b.dataset.age||null})); }catch(x){} location.href=GR.href("seances","#/nouvelle"); }
+  else location.href="https://eliotgrn.github.io/GRUN/seances.html#/nouvelle"; });
+/* boutons « Exercices de cette ligne » et « Tests » sur les documents liés à des lignes de grille */
+function linesBox(code, age){
+  const ls = [...new Set((REV[code]||[]).map(x=>x[0]))]; if(!ls.length || ls.length>4) return "";
+  age = Math.max(4, Math.min(18, age||10));
+  return `<div class="lines"><b>Mettre en pratique</b>${ls.map(l=>`<div class="lrow"><span>${esc(ligNom(l))}<span class="xp"> · ${l}</span></span><a class="lk pri" href="https://eliotgrn.github.io/GRUN/banque.html#/l/${l}?a=${age}">Exercices · ${age} ans</a><a class="lk" href="#" data-sess="${l}" data-age="${age}">Créer une séance</a><a class="lk" href="https://eliotgrn.github.io/GRUN/grilles.html#/ligne/${l}/G/${age}">Grille garçons ${age} ans</a><a class="lk" href="https://eliotgrn.github.io/GRUN/grilles.html#/ligne/${l}/F/${age}">Grille filles ${age} ans</a><a class="lk" href="#/l/${l}">Tous les documents</a></div>`).join("")}</div>`;
+}
+/* ---------- documents d'une ligne de grille ---------- */
+function showLigne(l, am){
+  if(!okLig(l)) return showHome();
+  const age = am ? Math.max(4, Math.min(18, +am[1])) : (ageCourant() || (/^\d+$/.test(P.age) ? +P.age : null)); titre(ligNom(l));
+  const d = l.slice(0,2), col = LCOL[d], g = (LV.L||{})[l] || {}, G = LV.g || {};
+  document.documentElement.style.setProperty("--acc", col);
+  const lst = cs => `<div class="list">${cs.filter(c=>BY[c]).map(c=>{ const x=BY[c]; return `<a class="li hasx" href="#d/${c}${(g.a||[]).includes(c)&&age?`/a${age}`:""}"><span class="code cx">${c}</span><span class="tt">${esc(x.t)}<small>${esc(x.d.replace(/^\d+(\.\d+)?\s/,""))}</small></span></a>`; }).join("")}</div>`;
+  const order = [["c","Comprendre"],["a","Âge par âge"],["s","Séances et routines"],["b","Biomécanique et liens"],["t","Tests et évaluation"]];
+  const m = $("#main"); m.style.setProperty("--pc", col);
+  m.innerHTML = `<div class="crumb"><a href="#">Veille</a>›<span>${DOMN[d]}</span></div><h1 style="color:${col};margin-top:4px">${esc(ligNom(l))}<span class="xp"> · ${l}</span></h1>
+   <p class="lead">Les documents de la veille pour cette ligne de grille, regroupés pour comprendre, situer l'âge, construire les séances et évaluer.</p>
+   <div class="lines"><div class="lrow"><a class="lk pri" href="https://eliotgrn.github.io/GRUN/banque.html#/l/${l}${age?`?a=${age}`:""}">Exercices de cette ligne${age?` · ${age} ans`:""}</a><a class="lk" href="#" data-sess="${l}" data-age="${age||""}">Créer une séance</a><a class="lk" href="https://eliotgrn.github.io/GRUN/grilles.html#/ligne/${l}/G/${age||10}">Grille garçons ${age||10} ans</a><a class="lk" href="https://eliotgrn.github.io/GRUN/grilles.html#/ligne/${l}/F/${age||10}">Grille filles ${age||10} ans</a></div></div>
+   ${order.filter(([k])=>(g[k]||[]).some(c=>BY[c])).map(([k,t])=>`<div class="fold" style="--pc:${col}"><h3>${esc(G[k]||t)}</h3>${lst(g[k])}</div>`).join("") || '<div class="empty" style="margin-top:12px">Aucun document lié à cette ligne.</div>'}
+   ${actbar("Créer une séance · "+ligNom(l), ()=>0)}`;
+  const am2=$("#actmain"); if(am2){ am2.dataset.sess=l; am2.dataset.age=age||""; }
 }
 function ageIn(text, age){
   const t = fold(text); if(!/\ban|ans\b/.test(t)) return false;
@@ -295,25 +701,25 @@ let sT;
 $("#q").addEventListener("input", e=>{ clearTimeout(sT); const v=e.target.value.trim(); sT=setTimeout(()=>{ if(v.length>=2) history.replaceState(null,"","#s/"+encodeURIComponent(v)), showSearch(v); else if(!v && location.hash.startsWith("#s/")) location.hash=""; },250); });
 $("#q").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.target.blur(); } });
 function terms(q){ return fold(q).split(/\s+/).filter(w=>w.length>=2); }
-function showSearch(q){
+function showSearch(q, fini){
   document.documentElement.style.setProperty("--acc", "var(--ink)");
-  buildIndex();
   const ts = terms(q), m = $("#main");
-  if(!ts.length){ showHome(); return; }
-  const res = [];
-  NORM.forEach((n,i)=>{
+  if(!ts.length){ showHome(); return; } titre("Recherche « "+q+" »");
+  if(!fini && DOCS.some(x=>x.h==null)){ const h0 = location.hash; if(!m.querySelector(".res")) m.innerHTML = `<h1>Recherche</h1><p class="lead">Recherche de « ${esc(q)} » dans toute la veille…</p>`;
+    tousPaquets().then(()=>{ if(location.hash===h0) showSearch(q, true); }, ()=>{ if(location.hash===h0) m.innerHTML = '<div class="empty">La recherche n\'a pas pu charger tous les documents. Vérifie la connexion pour la première ouverture, puis réessaie.</div>'; }); return; }
+  const res = [], RE = ts.map(motif);
+  DOCS.forEach((x,i)=>{ if(x.h==null) return;
     let score=0, first=-1;
-    for(const t of ts){ let c=0, pos=n.f.indexOf(t); if(pos<0){ score=0; return; } if(first<0||pos<first) first=pos; while(pos>=0 && c<60){ c++; pos=n.f.indexOf(t,pos+t.length); } score+=c; }
-    if(fold(DOCS[i].t).includes(ts[0])) score+=40;
+    for(const re of RE){ const [ct] = compte(x.t, re, false), [cb, p] = compte(x.h, re, true); if(!ct && !cb) return; if(p>=0 && (first<0||p<first)) first=p; score += Math.min(60, ct+cb); }
+    if(fold(x.t).includes(ts[0])) score+=40;
     res.push({i, score, first});
   });
   res.sort((a,b)=>b.score-a.score);
   const top = res.slice(0,60);
   let html = `<h1>Recherche</h1><p class="lead">${res.length ? `${res.length} document${res.length>1?"s":""} pour « ${esc(q)} »${res.length>60?" · les 60 plus pertinents":""}` : `Aucun document ne contient « ${esc(q)} ». Essaie un mot plus court ou un synonyme.`}</p><div class="sec">`;
-  html += top.map(r=>{ const x=DOCS[r.i], n=NORM[r.i]; const a=Math.max(0,r.first-90), b=Math.min(n.raw.length,r.first+190);
-    let snip = (a?"…":"")+n.raw.slice(a,b)+(b<n.raw.length?"…":"");
-    snip = markTerms(esc(snip), ts);
-    return `<a class="res" href="#d/${x.c}/q${encodeURIComponent(q)}" style="--pc:${pc(porteOf(x))}"><div class="t">${esc(x.t)}</div><div class="w">${x.c} · ${PORTES[porteOf(x)].n} › ${esc(x.d.replace(/^\d+(\.\d+)?\s/,""))}</div><div class="s">${snip}</div></a>`; }).join("");
+  html += top.map(r=>{ const x=DOCS[r.i];
+    const snip = markTerms(esc(extrait(x, r.first, ts)), ts);
+    return `<a class="res" href="#d/${x.c}/q${encodeURIComponent(q)}" style="--pc:${pc(porteOf(x))}"><div class="t">${esc(x.t)}</div><div class="w"><span class="xp">${x.c} · </span>${PORTES[porteOf(x)].n} › ${esc(x.d.replace(/^\d+(\.\d+)?\s/,""))}</div><div class="s">${snip}</div></a>`; }).join("");
   m.innerHTML = html + "</div>";
 }
 function markTerms(htmlText, ts){
@@ -338,6 +744,7 @@ function highlight(q){
 
 /* ---------- sauvegarde ---------- */
 async function exportData(){
+  if(window.GRUN){ GRUN.telecharger(GRUN.exportAll(), "GRUN_sauvegarde_"+GRUN.today()+".json"); return; }
   const blob = new Blob([JSON.stringify({format:"veille", version:1, date:new Date().toISOString().slice(0,10), fav:P.fav, notes:P.notes}, null, 1)], {type:"application/json"});
   const name = "Veille_favoris_notes_"+new Date().toISOString().slice(0,10)+".json";
   let dl=null; try{ dl = await window.claude?.use?.("downloads"); }catch(e){}
@@ -346,11 +753,13 @@ async function exportData(){
 }
 async function importData(e){
   const f=e.target.files&&e.target.files[0]; e.target.value=""; if(!f) return; const m=$("#dmsg");
-  try{ const d=JSON.parse(await f.text()); if(d.format!=="veille") throw 0;
+  try{ const d=JSON.parse(await f.text());
+    if(window.GRUN && d && d.app==="GRUN" && d.data){ GRUN.importAll(d); P=Object.assign(P, load()); showHome(); $("#dmsg").textContent="Sauvegarde GRÜN restaurée (fusionnée avec les données de l'appareil)."; return; }
+    if(d.format!=="veille") throw 0;
     P.fav=[...new Set([...(d.fav||[]),...P.fav])]; P.notes=Object.assign({},P.notes,d.notes||{}); save(); showHome(); $("#dmsg").textContent="Favoris et notes restaurés."; }
-  catch(err){ m.textContent="Ce fichier n'est pas une sauvegarde de la veille (Veille_favoris_notes_….json)."; }
+  catch(err){ m.textContent="Ce fichier n'est pas une sauvegarde reconnue (GRUN_sauvegarde_….json ou Veille_favoris_notes_….json)."; }
 }
 
 boot();
 </script>
-<script>if("serviceWorker" in navigator){addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));}</script></body></html>
+</body></html>
